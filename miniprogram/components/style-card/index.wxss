@@ -1,0 +1,49 @@
+:host {
+  display: block;
+  box-sizing: border-box;
+}
+
+.card {
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  transition: border-color 0.15s ease;
+}
+
+/* 选中态只用描边表达，不再叠上浮 + 发光。
+   两层效果叠加正是「AI 生成感」的特征之一。 */
+.card.is-active {
+  border-color: var(--accent);
+}
+
+/*
+ * 纯色块，不做渐变、不叠高光、不放 emoji。
+ * 画风之间的区分靠色相，不靠装饰。
+ */
+.swatch {
+  height: 168rpx;
+}
+
+.meta {
+  padding: 20rpx 22rpx 22rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.card.is-active .name {
+  color: var(--accent);
+}
+
+.subtitle {
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  color: var(--text-3);
+  line-height: 1.45;
+}

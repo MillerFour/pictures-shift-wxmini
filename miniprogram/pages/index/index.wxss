@@ -1,0 +1,360 @@
+/* ==========================================================================
+   单页三步向导：upload → style → result
+   暖白 + 墨色 + 单一强调色，靠留白和字重分层，不靠装饰。
+   ========================================================================== */
+
+/* ---------- 步骤条 ---------- */
+
+.steps {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 40rpx 20rpx;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: none;
+}
+
+/*
+ * 不用数字，用圆点大小区分状态。
+ * 数字是 AI 生成界面的典型元素，而且中文步骤名本身就够短，不需要编号。
+ */
+.step-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--line-strong);
+  transition: background 0.2s ease;
+}
+
+.step-label {
+  font-size: 22rpx;
+  color: var(--text-3);
+}
+
+.step.is-on .step-dot {
+  width: 18rpx;
+  height: 18rpx;
+  background: var(--accent);
+}
+
+.step.is-on .step-label {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.step.is-done .step-dot {
+  background: var(--text-3);
+}
+
+.step-line {
+  flex: 1;
+  height: 2rpx;
+  margin: 0 16rpx;
+  background: var(--line);
+  transition: background 0.2s ease;
+}
+
+.step-line.is-on {
+  background: var(--line-strong);
+}
+
+/* ---------- 第一步 ---------- */
+
+.hero {
+  padding: 20rpx 0 48rpx;
+}
+
+/* 必须是 block：<text> 默认 inline，两行标题会挤在一行 */
+.hero-title {
+  display: block;
+}
+
+.hero-desc {
+  display: block;
+  margin-top: 24rpx;
+  max-width: 600rpx;
+}
+
+/* 上传区：只留一个描边框和两行字，没有图标、没有光晕 */
+.uploader {
+  height: 400rpx;
+  border-radius: var(--r-md);
+  border: 2rpx dashed var(--line-strong);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.uploader-hover {
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.uploader-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.uploader-sub {
+  margin-top: 14rpx;
+  font-size: 23rpx;
+  color: var(--text-3);
+}
+
+.note {
+  display: block;
+  margin-top: 20rpx;
+  line-height: 1.6;
+}
+
+.block {
+  margin-top: 56rpx;
+}
+
+/* 发丝线分隔，比阴影轻，也不会显得卡片化 */
+.rule {
+  height: 2rpx;
+  background: var(--line);
+  margin-bottom: 28rpx;
+}
+
+.pills {
+  margin-top: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.pill {
+  height: 58rpx;
+  padding: 0 20rpx;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.pill-dot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+  flex: none;
+}
+
+.pill-name {
+  font-size: 24rpx;
+  color: var(--text-2);
+}
+
+.privacy {
+  display: block;
+  margin-top: 56rpx;
+  line-height: 1.6;
+}
+
+.notice {
+  display: block;
+  margin-top: 28rpx;
+  font-size: 23rpx;
+  color: var(--text-3);
+  line-height: 1.6;
+}
+/* ---------- 第二步 ---------- */
+
+.preview-bar {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx 0 12rpx;
+}
+
+.thumb {
+  width: 104rpx;
+  height: 104rpx;
+  border-radius: var(--r-sm);
+  flex: none;
+  border: 2rpx solid var(--line);
+}
+
+.preview-meta {
+  gap: 4rpx;
+}
+
+.preview-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* 文字按钮：次要动作不该长得像按钮 */
+.link-btn {
+  flex: none;
+  font-size: 25rpx;
+  color: var(--accent);
+  padding: 12rpx 4rpx;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 40rpx 0 24rpx;
+}
+
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.grid-item {
+  width: calc((100% - 20rpx) / 2);
+}
+
+.block-head {
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.slider {
+  margin: 0 10rpx;
+}
+
+.block-scale {
+  justify-content: space-between;
+}
+
+/* ---------- 第三步 ---------- */
+
+.frame {
+  margin-top: 12rpx;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  background: var(--bg-elev);
+  border: 2rpx solid var(--line);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 图片解码完成后再淡入，避免白屏闪烁。
+   只淡入不位移：位移是刻意的「登场感」，这里不需要。 */
+.frame.revealed {
+  opacity: 1;
+}
+
+.result-img {
+  width: 100%;
+}
+
+.hint {
+  text-align: center;
+  margin-top: 18rpx;
+}
+
+/* 一行说清画风与耗时，不做成设置卡片 */
+.result-meta {
+  justify-content: center;
+  gap: 10rpx;
+  margin-top: 28rpx;
+}
+
+.result-style {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.action-row {
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.share {
+  font-size: 28rpx;
+}
+
+.btn-ghost-hover {
+  background: var(--surface-2);
+}
+/* ---------- 生成中 ---------- */
+
+.mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 100;
+  background: rgba(247, 246, 243, 0.96);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mask-card {
+  width: 540rpx;
+  padding: 64rpx 48rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 单色细弧，不做渐变描边 */
+.spinner {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 50%;
+  border: 3rpx solid var(--line);
+  border-top-color: var(--text);
+  animation: ps-spin 0.8s linear infinite;
+  margin-bottom: 36rpx;
+}
+
+@keyframes ps-spin {
+  to { transform: rotate(360deg); }
+}
+
+.mask-title {
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.mask-sub {
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.bar {
+  width: 100%;
+  height: 4rpx;
+  margin-top: 36rpx;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.bar-in {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+.bar-slide {
+  width: 35%;
+  height: 100%;
+  background: var(--accent);
+  animation: ps-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes ps-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(285%); }
+}

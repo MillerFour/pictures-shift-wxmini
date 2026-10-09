@@ -1,0 +1,27 @@
+# 依赖
+node_modules/
+miniprogram/miniprogram_npm/
+.pnpm-store/
+
+# 构建产物
+server/dist/
+server/tmp/
+
+# 环境变量（含密钥，绝不入库）
+.env
+.env.local
+.env.*.local
+
+# 微信开发者工具私有配置（含本机 AppID 路径等）
+project.private.config.json
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# 日志
+*.log
+npm-debug.log*

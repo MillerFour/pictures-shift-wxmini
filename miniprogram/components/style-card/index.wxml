@@ -1,0 +1,7 @@
+<view class="card {{active ? 'is-active' : ''}}" hover-class="none" bindtap="onTap" data-id="{{styleItem.id}}">
+  <view class="swatch" style="background: {{styleItem.swatch}};"></view>
+  <view class="meta">
+    <text class="name">{{styleItem.name}}</text>
+    <text class="subtitle">{{styleItem.subtitle}}</text>
+  </view>
+</view>

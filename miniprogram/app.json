@@ -1,0 +1,22 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#0a0c11",
+    "navigationBarTitleText": "照片百变",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0a0c11",
+    "backgroundColorTop": "#0a0c11",
+    "backgroundColorBottom": "#0a0c11",
+    "backgroundTextStyle": "light"
+  },
+  "permission": {
+    "scope.writePhotosAlbum": {
+      "desc": "用于把生成的作品保存到你的手机相册"
+    }
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

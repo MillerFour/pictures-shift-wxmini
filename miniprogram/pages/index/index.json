@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "照片百变",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "style-card": "/components/style-card/index"
+  }
+}

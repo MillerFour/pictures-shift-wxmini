@@ -1,0 +1,186 @@
+/* ==========================================================================
+   照片百变 · 全局设计令牌
+
+   刻意避开的那几样东西（它们是「一眼 AI 生成」的信号）：
+   - 紫蓝青霓虹渐变按钮、发光阴影
+   - 全站胶囊圆角
+   - 半透明玻璃拟态 + 深色底
+   - emoji 当图标
+
+   现在这套是暖白 + 墨色 + 单一暖强调色，参照专业修图工具的做法：
+   颜色只用在真正需要强调的地方（当前步骤、当前画风、进度），
+   一次只出现一个强调色，多了就俗。
+   ========================================================================== */
+
+page {
+  /* 暖白而非纯白：纯白在 OLED 上刺眼，冷灰显得廉价 */
+  --bg: #f7f6f3;
+  --bg-elev: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f0eee9;
+
+  /* 用「线」而不是「阴影」划分区块，这是纸面感的关键 */
+  --line: #e6e3dd;
+  --line-strong: #d5d1c8;
+
+  --text: #191917;
+  --text-2: #6d6a63;
+  --text-3: #9d998f;
+
+  /* 全站唯一强调色。用量必须少。 */
+  --accent: #c1502e;
+  --accent-soft: #fbf0eb;
+
+  --danger: #c0392b;
+
+  --r-sm: 6rpx;
+  --r-md: 10rpx;
+  --r-lg: 14rpx;
+
+  --shadow: 0 2rpx 10rpx rgba(25, 25, 23, 0.05);
+
+  background: var(--bg);
+  color: var(--text);
+  font-size: 28rpx;
+  line-height: 1.6;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', Helvetica, sans-serif;
+}
+
+view,
+text,
+button,
+image,
+slider,
+scroll-view {
+  box-sizing: border-box;
+}
+
+/* button 自带灰底 + 伪元素边框，会盖住自定义按钮样式，必须重置 */
+button {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font-size: inherit;
+  line-height: normal;
+  color: inherit;
+}
+
+button::after {
+  border: none;
+}
+
+image {
+  display: block;
+}
+
+/* ---------- 布局 ---------- */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-body {
+  flex: 1;
+  padding: 0 40rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---------- 文字 ---------- */
+
+.t-title {
+  font-size: 52rpx;
+  font-weight: 600;
+  letter-spacing: -0.5rpx;
+  line-height: 1.35;
+}
+
+.t-h2 {
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.t-body {
+  font-size: 27rpx;
+  color: var(--text-2);
+}
+
+.t-cap {
+  font-size: 23rpx;
+  color: var(--text-3);
+}
+
+/* ---------- 容器 ---------- */
+
+.card {
+  background: var(--surface);
+  border: 2rpx solid var(--line);
+  border-radius: var(--r-md);
+}
+
+/* 主按钮用墨色实心，不用渐变 */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  border-radius: var(--r-sm);
+  background: var(--text);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 500;
+}
+
+.btn-primary.is-disabled {
+  opacity: 0.4;
+}
+
+.btn-ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  border-radius: var(--r-sm);
+  border: 2rpx solid var(--line-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 28rpx;
+}
+
+/* 底部操作条：一根发丝线分隔，不用渐变遮罩 */
+.action-bar {
+  padding: 24rpx 40rpx calc(24rpx + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 2rpx solid var(--line);
+}
+
+/* ---------- 交互 ---------- */
+
+.tap {
+  transition: opacity 0.12s ease;
+}
+
+.tap:active {
+  opacity: 0.6;
+}
+
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  background: transparent;
+}
