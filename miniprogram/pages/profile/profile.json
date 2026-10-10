@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "我的",
+  "navigationBarTitleText": "",
   "usingComponents": {
     "pay-modal": "/components/pay-modal/index",
     "login-modal": "/components/login-modal/index"

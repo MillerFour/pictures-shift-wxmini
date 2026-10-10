@@ -1,4 +1,3 @@
-.hero { padding: 20rpx 0 32rpx; }
 .doc {
   padding: 40rpx 32rpx;
   display: flex;

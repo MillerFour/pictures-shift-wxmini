@@ -46,24 +46,23 @@
 
           <view class="example-head">
             <text class="t-h2">拖动滑块，先睹为快</text>
-            <text class="t-cap">同一画面，不同画风，挑一个你喜欢的吧~ </text>
+            <text class="t-cap">点下方画风立即切换效果，挑一个你喜欢的吧~</text>
           </view>
 
           <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />
 
-          <scroll-view scroll-x class="style-rail" enhanced show-scrollbar="{{false}}">
-            <view class="rail-inner">
-              <style-card
-                wx:for="{{styles}}"
-                wx:key="id"
-                class="rail-chip"
-                style-item="{{item}}"
-                active="{{item.id === styleId}}"
-                compact
-                bind:select="onSelectStyle"
-              />
-            </view>
-          </scroll-view>
+          <!-- 画风平铺一行：藏在横向滚动后面的选项等于让用户多操作一步，这里一屏看完 -->
+          <view class="style-row">
+            <style-card
+              wx:for="{{styles}}"
+              wx:key="id"
+              class="row-chip"
+              style-item="{{item}}"
+              active="{{item.id === styleId}}"
+              compact
+              bind:select="onSelectStyle"
+            />
+          </view>
 
           <view class="uploader" hover-class="uploader-hover" bindtap="onPickPhoto">
             <text class="uploader-title">上传照片，换成{{styleName}}</text>

@@ -51,14 +51,19 @@
   line-height: 1.45;
 }
 
-/* 紧凑芯片态：用于 landing 横滑选画风，只留名字、压低竖高。
-   选中态沿用 .card.is-active（描边 + 名字着 accent），全屏同时至多一个强调色。 */
+/*
+ * 紧凑芯片态：用于首屏一行平铺选画风，只留名字、压低竖高。
+ * 等宽由父级给（flex: 1 1 25%），这里只负责「在任何宽度下都居中、过长走省略号」。
+ * 圆角用 --r-md 而不是胶囊：一排等宽胶囊是典型的模板味，圆角矩形更像工具。
+ * 选中态沿用 .card.is-active（描边 + 名字着 accent），全屏同时至多一个强调色。
+ */
 .card.compact {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  height: 68rpx;
-  padding: 0 32rpx;
-  border-radius: 999rpx;
+  justify-content: center;
+  height: 72rpx;
+  padding: 0 12rpx;
+  border-radius: var(--r-md);
 }
 
 /* 密度档：仍是两列卡片，仅缩短色块 + 收紧内边距，用于第二步降低高度占用。
@@ -74,4 +79,9 @@
 .card.compact .name {
   font-size: 27rpx;
   font-weight: 500;
+  /* 画风名由 BFF 下发，长度不可控：宁可省略也不折行，否则一行芯片高矮不齐 */
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

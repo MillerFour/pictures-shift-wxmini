@@ -11,7 +11,7 @@ Component({
     styleItem: { type: Object, value: {} },
     /** 选中态由父级根据 styleId 比较得出，组件自己不存状态 */
     active: { type: Boolean, value: false },
-    /** 紧凑芯片态：只留名字，用于 landing 横滑选画风，压低竖高 */
+    /** 紧凑芯片态：只留名字，用于首屏一行平铺选画风，压低竖高 */
     compact: { type: Boolean, value: false },
     /** 密度档：仍是两列卡片，仅缩短色块 + 收紧内边距，用于第二步降低高度占用 */
     dense: { type: Boolean, value: false },

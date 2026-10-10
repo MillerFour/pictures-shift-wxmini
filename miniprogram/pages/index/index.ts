@@ -1,6 +1,7 @@
 import { ENV } from '../../config/env';
 import { createTask, loadRuntimeConfig, loadStyles, waitTask } from '../../services/api';
 import { STYLE_FALLBACK } from '../../constants/styles';
+import { EXAMPLE, exampleAfterOf } from '../../constants/examples';
 
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
@@ -33,9 +34,9 @@ Page({
     /** 步骤条用：1 / 2 / 3。由 goStep 统一维护，不要手动改 */
     stepIdx: 1,
 
-    /** 示例：原图与成片（使用用户提供的真实素材） */
-    exampleOriginal: '/assets/example-panda.jpg',
-    exampleAfter: '/assets/example-panda-ghibli.png',
+    /** 示例：原图与成片。成片跟选中画风联动（见 syncSelection） */
+    exampleOriginal: EXAMPLE.original,
+    exampleAfter: exampleAfterOf(FALLBACK_STYLE.id),
 
     styles: [] as StyleMeta[],
     styleId: FALLBACK_STYLE.id,
@@ -149,7 +150,7 @@ Page({
     this.setData({ step, stepIdx: step === 'upload' ? 1 : step === 'style' ? 2 : 3 });
   },
 
-  /** 同步选中画风 + 主按钮文案 */
+  /** 同步选中画风 + 主按钮文案 + 示例预览：画风相关的展示全部收在这里，不散落 */
   syncSelection(styleId: string): void {
     const picked = this.data.styles.find((s) => s.id === styleId);
     const name = picked?.name ?? '';
@@ -157,6 +158,7 @@ Page({
       styleId,
       styleName: name,
       submitLabel: `生成${name}风格`,
+      exampleAfter: exampleAfterOf(styleId),
     });
   },
 

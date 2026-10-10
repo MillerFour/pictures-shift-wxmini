@@ -1,4 +1,3 @@
-.hero { padding: 20rpx 0 32rpx; }
 .qa { overflow: hidden; }
 .item { border-bottom: 2rpx solid var(--line); }
 .item:last-child { border-bottom: none; }

@@ -11,6 +11,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
+    "examples": "tsx scripts/gen-examples.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

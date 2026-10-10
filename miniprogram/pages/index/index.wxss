@@ -92,17 +92,6 @@
 
 /* ---------- 第一步 ---------- */
 
-.hero {
-  padding: 20rpx 0 48rpx;
-  text-align: left;
-}
-
-.hero-desc {
-  display: block;
-  margin-top: 24rpx;
-  max-width: 600rpx;
-}
-
 /* 上传区：只留一个描边框和两行字，没有图标、没有光晕 */
 .uploader {
   height: 320rpx;
@@ -356,17 +345,17 @@
   margin-bottom: 24rpx;
 }
 
-.style-rail {
-  margin-top: 28rpx;
-  width: 100%;
-}
-
-.rail-inner {
+/* 四种画风等宽平铺，不做横向滚动：需要滑动才能看到的选项，对用户等于不存在。
+   风格多于 4 个时自动换行，仍然全部可见。 */
+.style-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 16rpx;
-  padding: 4rpx;
+  margin-top: 24rpx;
 }
 
-.rail-chip {
-  flex: none;
+.row-chip {
+  /* 4 个一行；min-width:0 让它能收窄，名字过长走省略号而不是撑破或折行 */
+  flex: 1 1 calc((100% - 48rpx) / 4);
+  min-width: 0;
 }

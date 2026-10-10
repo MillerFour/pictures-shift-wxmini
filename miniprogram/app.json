@@ -17,13 +17,13 @@
     ]
   },
   "window": {
-    "navigationBarBackgroundColor": "#0a0c11",
+    "navigationBarBackgroundColor": "#f7f6f3",
     "navigationBarTitleText": "照片百变",
-    "navigationBarTextStyle": "white",
-    "backgroundColor": "#0a0c11",
-    "backgroundColorTop": "#0a0c11",
-    "backgroundColorBottom": "#0a0c11",
-    "backgroundTextStyle": "light"
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f6f3",
+    "backgroundColorTop": "#f7f6f3",
+    "backgroundColorBottom": "#f7f6f3",
+    "backgroundTextStyle": "dark"
   },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",

@@ -1,7 +1,5 @@
 {
-  "navigationBarTitleText": "照片百变",
-  "navigationBarBackgroundColor": "#f7f6f3",
-  "navigationBarTextStyle": "black",
+  "navigationBarTitleText": "",
   "enablePullDownRefresh": false,
   "disableScroll": true,
   "usingComponents": {
