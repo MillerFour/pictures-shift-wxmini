@@ -4,7 +4,8 @@
  * 底层铺「转换后」图，上层叠「原图」(view + background-image)，用 clip-path 横向裁切，
  * 裁切边界跟随中间分割线。原生 <image> 不支持 clip-path，故原图层用非原生 view 承载。
  *
- * 拖拽事件只绑在把手（.cmp-knob）上：其余元素不捕获触摸 → 页面纵向滚动不受影响；
+ * 拖拽事件只绑在把手（.cmp-knob）上：其余元素不捕获触摸 → 外层纵向滚动不受影响；
+ * 把手用 catchtouchmove 拦下 move（否则拖把手会连带滚动外层 scroll-view），
  * 触摸被把手捕获后，即便手指移出把手仍持续收到 touchmove，拖动顺滑无延迟。
  */
 Component({

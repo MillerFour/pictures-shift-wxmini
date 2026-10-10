@@ -3,6 +3,34 @@
    暖白 + 墨色 + 单一强调色，靠留白和字重分层，不靠装饰。
    ========================================================================== */
 
+/* ---------- 页面骨架 ---------- */
+
+/*
+ * 页面级滚动在手机上会整页跟着手指动、还带滚动条，这里彻底关掉
+ * （index.json 的 disableScroll），滚动只发生在内部 .index-scroll 里，
+ * 并用 bounces=false 关掉 iOS 的橡皮筋回弹。
+ */
+.index-page {
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+}
+
+/* 先按 100vh 兜底（确定性高度，内部才能滚起来）；
+   量出真实可视高度后由 index.ts 写成 px 覆盖 */
+.index-scroll {
+  height: 100vh;
+  /* 安卓端拖动到尽头时不要把滚动继续传给外层、也不要顶出回弹 */
+  overscroll-behavior: contain;
+}
+
+/* 内容不满一屏时，底部操作条照样贴在可视区底部（沿用原来的 flex 语义） */
+.scroll-inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 /* ---------- 步骤条 ---------- */
 
 .steps {

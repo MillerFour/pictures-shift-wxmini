@@ -6,6 +6,7 @@
     "pages/faq/faq"
   ],
   "tabBar": {
+    "custom": true,
     "color": "#9d998f",
     "selectedColor": "#191917",
     "backgroundColor": "#f7f6f3",

@@ -5,6 +5,7 @@ import { STYLE_FALLBACK } from '../../constants/styles';
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
 import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
+import { setTabBarHidden, syncTabBarFromPage, TAB_BAR_RPX_HEIGHT } from '../../utils/tabbar';
 import { isLoggedIn, type WxUser } from '../../utils/auth';
 import type { StyleMeta } from '../../types';
 
@@ -25,6 +26,9 @@ function formatCost(ms: number): string {
 
 Page({
   data: {
+    /** 滚动区高度（px）。0 = 还没量出来，先吃 CSS 的 100% */
+    scrollH: 0,
+
     step: 'upload' as Step,
     /** 步骤条用：1 / 2 / 3。由 goStep 统一维护，不要手动改 */
     stepIdx: 1,
@@ -81,9 +85,49 @@ Page({
     void this.hydrate();
   },
 
+  onReady() {
+    this.measureScrollArea();
+  },
+
+  onShow() {
+    // 底部菜单高亮由本页自己同步：此刻 route 必然正确，不受框架复用实例的时序影响
+    syncTabBarFromPage(this);
+  },
+
+  /**
+   * 量出滚动区真实高度。
+   *
+   * 不能写死 100vh：自定义 tabBar 是覆盖在页面上的独立渲染层，不同机型/版本上
+   * 框架给页面留的可视高度并不一致 —— 有的已经把 tabBar 那段扣掉了，有的没有。
+   * 前者还按 100vh 取，页面底部就会多出一条能拖动的空白；后者不扣，底部操作条
+   * 会被菜单压住。所以量一次页面容器的实际高度，再决定要不要减去 tabBar 那一段。
+   */
+  measureScrollArea(): void {
+    const sys = wx.getSystemInfoSync();
+    wx.createSelectorQuery()
+      .select('.index-page')
+      .boundingClientRect((rect) => {
+        if (!rect || !this.alive) return;
+
+        const rpx = sys.windowWidth / 750;
+        // 底部菜单自身高度 + Home 指示器那一段
+        const safeBottom = sys.safeArea ? Math.max(0, sys.screenHeight - sys.safeArea.bottom) : 0;
+        const barPx = TAB_BAR_RPX_HEIGHT * rpx + safeBottom;
+
+        // 框架已预留过 tabBar 高度时，页面容器会明显矮于 windowHeight，不再重复减
+        const reserved = sys.windowHeight - rect.height;
+        const visible = Math.min(rect.height, sys.windowHeight) - (reserved < barPx / 2 ? barPx : 0);
+
+        const h = Math.round(visible - rect.top);
+        if (h > 0) this.setData({ scrollH: h });
+      })
+      .exec();
+  },
+
   onUnload() {
     this.alive = false;
     this.stopFakeProgress();
+    setTabBarHidden(false);
   },
 
   onShareAppMessage() {
@@ -228,6 +272,8 @@ Page({
       phaseText: '正在上传原图',
       phaseHint: '照片越大上传越慢，稍等一下',
     });
+    // 生成中是整屏遮罩，底部菜单同样压不住（tabBar 在独立渲染层）
+    setTabBarHidden(true);
 
     try {
       const { taskId } = await createTask(
@@ -279,6 +325,7 @@ Page({
           phaseHint: '',
         });
       }
+      setTabBarHidden(false);
     }
   },
 

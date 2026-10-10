@@ -18,7 +18,7 @@
     aria-valuemax="100"
     aria-valuenow="{{pos}}"
     bindtouchstart="onTouch"
-    bindtouchmove="onTouch"
+    catchtouchmove="onTouch"
     bindkeyup="onKey"
   ></view>
   <view class="cmp-tag cmp-tag-left">原图</view>

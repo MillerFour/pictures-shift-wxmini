@@ -39,6 +39,8 @@ page {
 
   --shadow: 0 2rpx 10rpx rgba(25, 25, 23, 0.05);
 
+  /* 显式给高度，子页面的 height:100% 才有确定的参照（滚动页要靠它算可视高度） */
+  height: 100%;
   background: var(--bg);
   color: var(--text);
   font-size: 28rpx;
@@ -76,7 +78,9 @@ image {
 /* ---------- 布局 ---------- */
 
 .page {
-  min-height: 100vh;
+  /* 用 100% 而不是 100vh：tabBar 页的实际可视高度比 100vh 矮（底部菜单占掉一段），
+     写 100vh 会让页面凭空多出一截可滚动区域 —— 手机上表现为整页能被拖动。 */
+  min-height: 100%;
   display: flex;
   flex-direction: column;
 }

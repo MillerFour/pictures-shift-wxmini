@@ -17,11 +17,20 @@ const PACKAGES: PayPackage[] = [
   { id: 'value', name: '超值包', desc: '约 ¥0.5 / 张', price: '¥19.9', count: 40, tag: '更划算' },
 ];
 
+import { setTabBarHidden } from '../../utils/tabbar';
+
 Component({
   options: { addGlobalClass: true },
 
   properties: {
     show: { type: Boolean, value: false },
+  },
+
+  /** 半屏必须盖住底部菜单：tabBar 在独立渲染层，遮罩压不住，只能让它自己隐藏 */
+  observers: {
+    show(val: boolean) {
+      setTabBarHidden(val);
+    },
   },
 
   data: {

@@ -1,4 +1,5 @@
 import { getQuota, setQuota } from '../../utils/quota';
+import { syncTabBarFromPage } from '../../utils/tabbar';
 import { clearUser, getUser, isLoggedIn, type WxUser } from '../../utils/auth';
 
 interface PayPackageLite {
@@ -27,6 +28,8 @@ Page({
 
   onShow() {
     this.setData({ quota: getQuota(), loggedIn: isLoggedIn(), user: getUser() });
+    // 高亮由本页自己同步：onShow 时 route 必然正确，不受框架复用 tabBar 实例的时序影响
+    syncTabBarFromPage(this);
   },
 
   /** 手动登录入口 */

@@ -1,165 +1,185 @@
-<view class="page">
+<view class="page index-page">
 
-  <!-- 步骤条：细线 + 小点，不用彩色实心圆。引导页（上传步）先不显示，进入正式流程后再出现 -->
-  <view class="steps" wx:if="{{step !== 'upload'}}">
-    <view class="step {{stepIdx >= 1 ? 'is-on' : ''}} {{stepIdx > 1 ? 'is-done' : ''}}">
-      <view class="step-dot"></view>
-      <text class="step-label">上传照片</text>
-    </view>
-    <view class="step-line {{stepIdx >= 2 ? 'is-on' : ''}}"></view>
-    <view class="step {{stepIdx >= 2 ? 'is-on' : ''}} {{stepIdx > 2 ? 'is-done' : ''}}">
-      <view class="step-dot"></view>
-      <text class="step-label">选择风格</text>
-    </view>
-    <view class="step-line {{stepIdx >= 3 ? 'is-on' : ''}}"></view>
-    <view class="step {{stepIdx >= 3 ? 'is-on' : ''}}">
-      <view class="step-dot"></view>
-      <text class="step-label">AI成片</text>
-    </view>
-  </view>
+  <!--
+    整页不滚动（index.json 里 disableScroll），滚动交给内部 scroll-view：
+    页面级滚动在手机上一拖就是整页跟着动、露出滚动条，电脑模拟器上看不出来。
+    scrollH 由 index.ts 量出来 —— 自定义 tabBar 是覆盖层，各机型留给页面的
+    可视高度并不一致，写死 100vh 会让底部操作条压在菜单底下。
+    遮罩与弹层留在 scroll-view 外：fixed 元素放进滚动容器里定位会失真。
+  -->
+  <scroll-view
+    class="index-scroll"
+    style="{{scrollH ? 'height:' + scrollH + 'px' : ''}}"
+    scroll-y
+    enhanced
+    show-scrollbar="{{false}}"
+    bounces="{{false}}"
+  >
+    <view class="scroll-inner">
 
-  <!-- ============ 第一步：上传 + 示例引导 ============ -->
-  <!-- 示例滑块直接做主视觉：先拖动看效果、顺手挑好画风，再上传自己的照片 -->
-  <block wx:if="{{step === 'upload'}}">
-    <view class="page-body">
-
-      <view class="hero">
-        <text class="t-title">定格生活瞬间，一键换成多样艺术风格</text>
-      </view>
-
-      <view class="example-head">
-        <text class="t-h2">拖动滑块，先睹为快</text>
-        <text class="t-cap">同一画面，不同画风，挑一个你喜欢的吧~ </text>
-      </view>
-
-      <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />
-
-      <scroll-view scroll-x class="style-rail" enhanced show-scrollbar="{{false}}">
-        <view class="rail-inner">
-          <style-card
-            wx:for="{{styles}}"
-            wx:key="id"
-            class="rail-chip"
-            style-item="{{item}}"
-            active="{{item.id === styleId}}"
-            compact
-            bind:select="onSelectStyle"
-          />
+      <!-- 步骤条：细线 + 小点，不用彩色实心圆。引导页（上传步）先不显示，进入正式流程后再出现 -->
+      <view class="steps" wx:if="{{step !== 'upload'}}">
+        <view class="step {{stepIdx >= 1 ? 'is-on' : ''}} {{stepIdx > 1 ? 'is-done' : ''}}">
+          <view class="step-dot"></view>
+          <text class="step-label">上传照片</text>
         </view>
-      </scroll-view>
-
-      <view class="uploader" hover-class="uploader-hover" bindtap="onPickPhoto">
-        <text class="uploader-title">上传照片，换成{{styleName}}</text>
-        <text class="uploader-sub">JPG / PNG / WebP，{{maxSizeMB}}MB 以内</text>
-      </view>
-
-      <text class="t-cap privacy">照片只用于本次风格化，处理完即从服务端内存清除，不写入数据库。</text>
-
-      <view wx:if="{{notice}}" class="notice">{{notice}}</view>
-
-    </view>
-  </block>
-  <!-- ============ 第二步：选画风 ============ -->
-  <block wx:elif="{{step === 'style'}}">
-    <view class="page-body">
-
-      <view class="preview-bar">
-        <image class="thumb" src="{{photoPath}}" mode="aspectFill" bindtap="onPreviewPhoto" />
-        <view class="col grow preview-meta">
-          <text class="preview-title">照片已就绪</text>
-          <text class="t-cap">{{photoMeta}}</text>
+        <view class="step-line {{stepIdx >= 2 ? 'is-on' : ''}}"></view>
+        <view class="step {{stepIdx >= 2 ? 'is-on' : ''}} {{stepIdx > 2 ? 'is-done' : ''}}">
+          <view class="step-dot"></view>
+          <text class="step-label">选择风格</text>
         </view>
-        <view class="link-btn" hover-class="none" bindtap="onPickPhoto">换一张</view>
-      </view>
-
-      <view class="section-head">
-        <text class="t-h2">挑一个画风</text>
-        <text class="t-cap">已选 {{styleName}}</text>
-      </view>
-
-      <view class="grid">
-        <style-card
-          wx:for="{{styles}}"
-          wx:key="id"
-          class="grid-item"
-          style-item="{{item}}"
-          active="{{item.id === styleId}}"
-          dense
-          bind:select="onSelectStyle"
-        />
-      </view>
-
-      <view class="block">
-        <view class="row block-head">
-          <text class="t-h2">画风强度</text>
-          <text class="t-cap">{{strength}}</text>
+        <view class="step-line {{stepIdx >= 3 ? 'is-on' : ''}}"></view>
+        <view class="step {{stepIdx >= 3 ? 'is-on' : ''}}">
+          <view class="step-dot"></view>
+          <text class="step-label">AI成片</text>
         </view>
-        <slider
-          class="slider"
-          min="0"
-          max="100"
-          value="{{strength}}"
-          block-size="18"
-          activeColor="#c1502e"
-          backgroundColor="#e2dfd8"
-          block-color="#ffffff"
-          bindchanging="onStrengthChanging"
-          bindchange="onStrengthChange"
-        />
-        <view class="row block-scale">
-          <text class="t-cap">越低越像原图</text>
-          <text class="t-cap">越高越有画风</text>
+      </view>
+
+      <!-- ============ 第一步：上传 + 示例引导 ============ -->
+      <!-- 示例滑块直接做主视觉：先拖动看效果、顺手挑好画风，再上传自己的照片 -->
+      <block wx:if="{{step === 'upload'}}">
+        <view class="page-body">
+
+          <view class="hero">
+            <text class="t-title">定格生活瞬间，一键换成多样艺术风格</text>
+          </view>
+
+          <view class="example-head">
+            <text class="t-h2">拖动滑块，先睹为快</text>
+            <text class="t-cap">同一画面，不同画风，挑一个你喜欢的吧~ </text>
+          </view>
+
+          <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />
+
+          <scroll-view scroll-x class="style-rail" enhanced show-scrollbar="{{false}}">
+            <view class="rail-inner">
+              <style-card
+                wx:for="{{styles}}"
+                wx:key="id"
+                class="rail-chip"
+                style-item="{{item}}"
+                active="{{item.id === styleId}}"
+                compact
+                bind:select="onSelectStyle"
+              />
+            </view>
+          </scroll-view>
+
+          <view class="uploader" hover-class="uploader-hover" bindtap="onPickPhoto">
+            <text class="uploader-title">上传照片，换成{{styleName}}</text>
+            <text class="uploader-sub">JPG / PNG / WebP，{{maxSizeMB}}MB 以内</text>
+          </view>
+
+          <text class="t-cap privacy">照片只用于本次风格化，处理完即从服务端内存清除，不写入数据库。</text>
+
+          <view wx:if="{{notice}}" class="notice">{{notice}}</view>
+
         </view>
-        <text class="t-cap note">头像建议 60-75，整张人像可以再高一点。</text>
-      </view>
+      </block>
+      <!-- ============ 第二步：选画风 ============ -->
+      <block wx:elif="{{step === 'style'}}">
+        <view class="page-body">
 
-      <view wx:if="{{notice}}" class="notice">{{notice}}</view>
+          <view class="preview-bar">
+            <image class="thumb" src="{{photoPath}}" mode="aspectFill" bindtap="onPreviewPhoto" />
+            <view class="col grow preview-meta">
+              <text class="preview-title">照片已就绪</text>
+              <text class="t-cap">{{photoMeta}}</text>
+            </view>
+            <view class="link-btn" hover-class="none" bindtap="onPickPhoto">换一张</view>
+          </view>
+
+          <view class="section-head">
+            <text class="t-h2">挑一个画风</text>
+            <text class="t-cap">已选 {{styleName}}</text>
+          </view>
+
+          <view class="grid">
+            <style-card
+              wx:for="{{styles}}"
+              wx:key="id"
+              class="grid-item"
+              style-item="{{item}}"
+              active="{{item.id === styleId}}"
+              dense
+              bind:select="onSelectStyle"
+            />
+          </view>
+
+          <view class="block">
+            <view class="row block-head">
+              <text class="t-h2">画风强度</text>
+              <text class="t-cap">{{strength}}</text>
+            </view>
+            <slider
+              class="slider"
+              min="0"
+              max="100"
+              value="{{strength}}"
+              block-size="18"
+              activeColor="#c1502e"
+              backgroundColor="#e2dfd8"
+              block-color="#ffffff"
+              bindchanging="onStrengthChanging"
+              bindchange="onStrengthChange"
+            />
+            <view class="row block-scale">
+              <text class="t-cap">越低越像原图</text>
+              <text class="t-cap">越高越有画风</text>
+            </view>
+            <text class="t-cap note">头像建议 60-75，整张人像可以再高一点。</text>
+          </view>
+
+          <view wx:if="{{notice}}" class="notice">{{notice}}</view>
+
+        </view>
+
+        <view class="action-bar">
+          <view class="row" style="gap:16rpx">
+            <view class="btn-ghost grow" hover-class="btn-ghost-hover" bindtap="onReset">取 消</view>
+            <view class="btn-primary grow" bindtap="onSubmit">{{submitLabel}}</view>
+          </view>
+        </view>
+      </block>
+
+      <!-- ============ 第三步：成片 ============ -->
+      <block wx:else>
+        <view class="page-body">
+
+          <view class="frame {{revealed ? 'revealed' : ''}}">
+            <image
+              class="result-img"
+              src="{{showOriginal ? photoPath : resultUrl}}"
+              mode="widthFix"
+              bindtouchstart="onShowOriginal"
+              bindtouchend="onHideOriginal"
+              bindtouchcancel="onHideOriginal"
+            />
+          </view>
+          <text class="t-cap note hint">{{showOriginal ? '原图' : '按住图片可对比原图'}}</text>
+
+          <view class="row result-meta">
+            <text class="result-style">{{styleName}}</text>
+            <text class="t-cap" wx:if="{{costText}}">· {{costText}}</text>
+          </view>
+
+          <text class="t-cap note hint">不满意可以换个画风或换张照片，不用重新上传。</text>
+
+        </view>
+
+        <view class="action-bar">
+          <view class="btn-primary {{saving ? 'is-disabled' : ''}}" bindtap="onSave">
+            {{saving ? '保存中…' : '保存到相册'}}
+          </view>
+          <view class="row action-row">
+            <view class="btn-ghost grow" hover-class="btn-ghost-hover" bindtap="onBackToStyle">换个画风</view>
+            <button class="btn-ghost grow share" hover-class="btn-ghost-hover" open-type="share">分享给朋友</button>
+          </view>
+        </view>
+      </block>
 
     </view>
-
-    <view class="action-bar">
-      <view class="row" style="gap:16rpx">
-        <view class="btn-ghost grow" hover-class="btn-ghost-hover" bindtap="onReset">取 消</view>
-        <view class="btn-primary grow" bindtap="onSubmit">{{submitLabel}}</view>
-      </view>
-    </view>
-  </block>
-
-  <!-- ============ 第三步：成片 ============ -->
-  <block wx:else>
-    <view class="page-body">
-
-      <view class="frame {{revealed ? 'revealed' : ''}}">
-        <image
-          class="result-img"
-          src="{{showOriginal ? photoPath : resultUrl}}"
-          mode="widthFix"
-          bindtouchstart="onShowOriginal"
-          bindtouchend="onHideOriginal"
-          bindtouchcancel="onHideOriginal"
-        />
-      </view>
-      <text class="t-cap note hint">{{showOriginal ? '原图' : '按住图片可对比原图'}}</text>
-
-      <view class="row result-meta">
-        <text class="result-style">{{styleName}}</text>
-        <text class="t-cap" wx:if="{{costText}}">· {{costText}}</text>
-      </view>
-
-      <text class="t-cap note hint">不满意可以换个画风或换张照片，不用重新上传。</text>
-
-    </view>
-
-    <view class="action-bar">
-      <view class="btn-primary {{saving ? 'is-disabled' : ''}}" bindtap="onSave">
-        {{saving ? '保存中…' : '保存到相册'}}
-      </view>
-      <view class="row action-row">
-        <view class="btn-ghost grow" hover-class="btn-ghost-hover" bindtap="onBackToStyle">换个画风</view>
-        <button class="btn-ghost grow share" hover-class="btn-ghost-hover" open-type="share">分享给朋友</button>
-      </view>
-    </view>
-  </block>
+  </scroll-view>
 
   <!-- ============ 生成中 ============ -->
   <view wx:if="{{submitting}}" class="mask">
@@ -179,5 +199,4 @@
 
   <!-- ============ 授权登录（上传拦截 / 手动登录共用） ============ -->
   <login-modal show="{{showLogin}}" bind:login="onLoginSuccess" bind:close="onCloseLogin" />
-
 </view>

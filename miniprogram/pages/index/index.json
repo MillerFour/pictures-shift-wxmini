@@ -3,6 +3,7 @@
   "navigationBarBackgroundColor": "#f7f6f3",
   "navigationBarTextStyle": "black",
   "enablePullDownRefresh": false,
+  "disableScroll": true,
   "usingComponents": {
     "style-card": "/components/style-card/index",
     "pay-modal": "/components/pay-modal/index",

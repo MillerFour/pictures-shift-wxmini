@@ -1,4 +1,5 @@
 import { saveUser, wxLogin, type WxUser } from '../../utils/auth';
+import { setTabBarHidden } from '../../utils/tabbar';
 import { loginWithCode } from '../../services/auth';
 
 /**
@@ -18,28 +19,19 @@ Component({
   },
 
   /**
-   * 原生 tabBar 是原生组件，普通 fixed 遮罩盖不住它；
-   * 用 hideTabBar/showTabBar 在弹层显隐时切换，让半屏真正覆盖底部菜单。
+   * 半屏必须盖住底部菜单，但 tabBar 在独立渲染层、遮罩压不住它，
+   * 所以弹层开合时让 tabBar 跟着显隐（见 utils/tabbar）。
    */
   observers: {
     show(val: boolean) {
-      try {
-        if (val) wx.hideTabBar({ animation: false });
-        else wx.showTabBar({ animation: false });
-      } catch {
-        /* 非 tab 页或异常时忽略 */
-      }
+      setTabBarHidden(val);
     },
   },
 
   lifetimes: {
     detached() {
-      // 卸载兜底：避免弹层开着时切走页面导致 tabBar 永久隐藏
-      try {
-        wx.showTabBar({ animation: false });
-      } catch {
-        /* ignore */
-      }
+      // 卸载兜底：弹层开着时切走页面，避免 tabBar 停留在隐藏态
+      setTabBarHidden(false);
     },
   },
 

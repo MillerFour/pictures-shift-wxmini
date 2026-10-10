@@ -1,0 +1,40 @@
+/* 自定义 tabBar：框架自动挂载在页面内容之上（custom: true），页面无需再手动引入。
+   它所在的渲染层高于页面内所有 z-index，所以半屏遮罩盖不住它 —— 只能由本页
+   通过 utils/tabbar 调 setTabBarHidden 让它自行隐藏（见 index.ts）。 */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  background: #f7f6f3;
+  border-top: 2rpx solid #e6e3dd;
+  padding-bottom: env(safe-area-inset-bottom);
+  transition: opacity 0.24s ease;
+}
+
+/* 半屏弹层打开时淡出；pointer-events 保证底部点击落在遮罩上（关弹层）而不是这里 */
+.tabbar.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tab {
+  flex: 1;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-text {
+  font-size: 26rpx;
+  color: #9d998f;
+  line-height: 1;
+}
+
+.tab.is-on .tab-text {
+  color: #191917;
+  font-weight: 500;
+}
