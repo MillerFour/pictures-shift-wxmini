@@ -113,15 +113,26 @@
   border-bottom: none;
 }
 
-/* chooseAvatar 按钮需要重置为普通行样式 */
-.row[open-type="chooseAvatar"] {
-  margin: 0;
-  border-radius: 0;
-  line-height: normal;
-  text-align: left;
+/* 头像行：视觉布局用纯 view，chooseAvatar 授权交给一层透明 button 覆盖整行，
+   避免原生 button 的默认字重/内边距/对齐干扰整行视觉（与昵称行保持一致） */
+.avatar-row {
+  position: relative;
 }
 
-.row[open-type="chooseAvatar"]::after {
+.row-trigger {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  opacity: 0;
+}
+
+.row-trigger::after {
   border: none;
 }
 
@@ -149,15 +160,20 @@
 }
 
 .row-placeholder {
+  display: inline-block;
   font-size: 26rpx;
   color: var(--text-3);
+  white-space: nowrap;
+  line-height: 1;
 }
 
 .row-arrow {
+  display: inline-block;
   flex: none;
   margin-left: 16rpx;
   font-size: 34rpx;
   color: var(--text-3);
+  line-height: 1;
 }
 
 /* 昵称行：input 占满剩余空间 */

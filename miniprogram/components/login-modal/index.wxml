@@ -13,14 +13,16 @@
 
     <view class="rows">
       <!-- 头像：chooseAvatar 独立接口，整行可点 -->
-      <button class="row" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+      <!-- 视觉行用纯 view（与昵称行一致），chooseAvatar 授权交给透明覆盖按钮，避免原生 button 样式干扰对齐 -->
+      <view class="row avatar-row">
         <text class="row-label">头像</text>
         <view class="row-core">
           <image wx:if="{{avatarUrl}}" class="row-avatar" src="{{avatarUrl}}" mode="aspectFill" />
           <text wx:else class="row-placeholder">点击授权</text>
         </view>
         <text class="row-arrow">›</text>
-      </button>
+        <button class="row-trigger" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" hover-class="none" />
+      </view>
 
       <!-- 昵称：nickname input 独立接口 -->
       <view class="row nickname-row">
