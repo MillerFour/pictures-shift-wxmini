@@ -66,6 +66,7 @@
 
 .hero {
   padding: 20rpx 0 48rpx;
+  text-align: left;
 }
 
 .hero-desc {

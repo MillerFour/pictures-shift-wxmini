@@ -1,7 +1,7 @@
 import { ENV } from '../../config/env';
 import { createTask, loadRuntimeConfig, loadStyles, waitTask } from '../../services/api';
 import { STYLE_FALLBACK } from '../../constants/styles';
-import { EXAMPLE } from '../../constants/examples';
+
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
 import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
@@ -29,9 +29,9 @@ Page({
     /** 步骤条用：1 / 2 / 3。由 goStep 统一维护，不要手动改 */
     stepIdx: 1,
 
-    /** 示例：原图与成片（成片缺省回退原图；成片跟随当前选中画风） */
-    exampleOriginal: EXAMPLE.original,
-    exampleAfter: EXAMPLE.after[FALLBACK_STYLE.id] ?? EXAMPLE.original,
+    /** 示例：原图与成片（使用用户提供的真实素材） */
+    exampleOriginal: '/assets/example-panda.jpg',
+    exampleAfter: '/assets/example-panda-ghibli.png',
 
     styles: [] as StyleMeta[],
     styleId: FALLBACK_STYLE.id,
@@ -113,7 +113,6 @@ Page({
       styleId,
       styleName: name,
       submitLabel: `生成${name}风格`,
-      exampleAfter: EXAMPLE.after[styleId] ?? EXAMPLE.original,
     });
   },
 

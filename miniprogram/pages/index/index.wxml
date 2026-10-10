@@ -29,7 +29,7 @@
 
       <view class="example-head">
         <text class="t-h2">拖动滑块，先睹为快</text>
-        <text class="t-cap">同一画面，不同画风，挑一个你喜欢的</text>
+        <text class="t-cap">同一画面，不同画风，挑一个你喜欢的吧~ </text>
       </view>
 
       <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />

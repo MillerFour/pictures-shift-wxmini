@@ -1,11 +1,11 @@
 /**
- * 图像对比滑块。
+ * 图像对比滑块（Before-After）。
  *
- * 左半边是原图（before），右半边是成片（after），中间一条可拖动的分割线。
- * 拖动时改变 before 容器的宽度（百分比），露出或盖住原图，从而实现「擦除式」对比。
+ * 底层铺「转换后」图，上层叠「原图」(view + background-image)，用 clip-path 横向裁切，
+ * 裁切边界跟随中间分割线。原生 <image> 不支持 clip-path，故原图层用非原生 view 承载。
  *
- * before 图宽度用测量得到的容器像素宽（boxW）固定，避免被外层裁剪容器压窄，
- * 这样两侧图片始终等宽对齐。
+ * 拖拽事件只绑在把手（.cmp-knob）上：其余元素不捕获触摸 → 页面纵向滚动不受影响；
+ * 触摸被把手捕获后，即便手指移出把手仍持续收到 touchmove，拖动顺滑无延迟。
  */
 Component({
   options: { addGlobalClass: true },
@@ -21,6 +21,7 @@ Component({
 
   data: {
     pos: 50,
+    /** 容器像素宽：让原图与成片等宽对齐 */
     boxW: 0,
     rectLeft: 0,
     rectWidth: 1,
@@ -42,20 +43,33 @@ Component({
         .select('.cmp')
         .boundingClientRect((rect) => {
           if (!rect) return;
-          this.setData({
-            boxW: Math.round(rect.width),
-            rectLeft: rect.left,
-            rectWidth: rect.width || 1,
-          });
+          this.setData({ boxW: Math.round(rect.width), rectLeft: rect.left, rectWidth: rect.width || 1 });
         })
         .exec();
     },
 
+    /** 把手的 touchstart / touchmove 共用：实时换算分割位置 */
     onTouch(e: WechatMiniprogram.TouchEvent) {
       const t = e.touches[0] || e.changedTouches[0];
       if (!t) return;
-      const { rectLeft, rectWidth } = this.data;
-      let p = ((t.clientX - rectLeft) / rectWidth) * 100;
+      // 每次按下重新测量，纠正页面滚动后 left 偏移
+      if (e.type === 'touchstart') this.measure();
+      const w = this.data.boxW || this.data.rectWidth;
+      if (!w) return;
+      const x = t.clientX - this.data.rectLeft;
+      let p = (x / w) * 100;
+      p = Math.max(0, Math.min(100, p));
+      this.setData({ pos: p });
+    },
+
+    /** 无障碍 slider：键盘左右键微调（小程序支持有限，作为增强） */
+    onKey(e: WechatMiniprogram.KeyboardEvent) {
+      const code = (e as unknown as { keyCode?: number; key?: string }).keyCode;
+      const step = 2;
+      let p = this.data.pos;
+      if (code === 37 || (e as unknown as { key?: string }).key === 'ArrowLeft') p -= step;
+      else if (code === 39 || (e as unknown as { key?: string }).key === 'ArrowRight') p += step;
+      else return;
       p = Math.max(0, Math.min(100, p));
       this.setData({ pos: p });
     },

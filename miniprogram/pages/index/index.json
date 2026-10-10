@@ -1,5 +1,7 @@
 {
   "navigationBarTitleText": "照片百变",
+  "navigationBarBackgroundColor": "#f7f6f3",
+  "navigationBarTextStyle": "black",
   "enablePullDownRefresh": false,
   "usingComponents": {
     "style-card": "/components/style-card/index",

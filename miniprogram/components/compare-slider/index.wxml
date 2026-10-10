@@ -1,9 +1,26 @@
-<view class="cmp" catchtouchstart="onTouch" catchtouchmove="onTouch">
+<view class="cmp">
+  <!-- 底层：转换后（成片） -->
   <image class="cmp-img" src="{{after}}" mode="aspectFill" />
+  <!-- 上层：原图。wrapper 宽度 = 分割百分比并 overflow 裁切；
+       before 图固定为容器全宽，保证左右两侧等宽对齐 -->
   <view class="cmp-before" style="width:{{pos}}%">
-    <image class="cmp-img cmp-before-img" src="{{before}}" mode="aspectFill" style="width:{{boxW}}px" />
+    <image class="cmp-img cmp-before-img" src="{{before}}" mode="aspectFill" style="width:{{boxW}}px" bindload="measure" />
   </view>
-  <view class="cmp-handle" style="left:{{pos}}%">
-    <view class="cmp-knob"></view>
-  </view>
+  <!-- 中间分割线 -->
+  <view class="cmp-divider" style="left:{{pos}}%"></view>
+  <!-- 拖拽把手（唯一接收触摸/键盘的元素，其余穿透） -->
+  <view
+    class="cmp-knob"
+    style="left:{{pos}}%"
+    role="slider"
+    aria-label="原图与转换后对比"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    aria-valuenow="{{pos}}"
+    bindtouchstart="onTouch"
+    bindtouchmove="onTouch"
+    bindkeyup="onKey"
+  ></view>
+  <view class="cmp-tag cmp-tag-left">原图</view>
+  <view class="cmp-tag cmp-tag-right">转换后</view>
 </view>
