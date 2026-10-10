@@ -4,6 +4,7 @@
   "usingComponents": {
     "style-card": "/components/style-card/index",
     "pay-modal": "/components/pay-modal/index",
-    "compare-slider": "/components/compare-slider/index"
+    "compare-slider": "/components/compare-slider/index",
+    "login-modal": "/components/login-modal/index"
   }
 }

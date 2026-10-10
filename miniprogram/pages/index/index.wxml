@@ -177,4 +177,7 @@
   <!-- ============ 付费墙（占位弹层） ============ -->
   <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
 
+  <!-- ============ 授权登录（上传拦截 / 手动登录共用） ============ -->
+  <login-modal show="{{showLogin}}" bind:login="onLoginSuccess" bind:close="onCloseLogin" />
+
 </view>

@@ -1,0 +1,59 @@
+<view class="mask {{show ? 'show' : ''}}" catchtap="onClose">
+  <view class="sheet" catchtap="noop">
+    <view class="sheet-head">
+      <view class="brand">
+        <view class="brand-icon">百</view>
+        <text class="brand-name">照片百变</text>
+      </view>
+      <view class="close" hover-class="none" catchtap="onClose">×</view>
+    </view>
+
+    <text class="welcome">欢迎来到照片百变</text>
+    <text class="sub">登录后可保存创作记录与次数，需授权你的微信头像与昵称</text>
+
+    <view class="rows">
+      <!-- 头像：chooseAvatar 独立接口，整行可点 -->
+      <button class="row" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <text class="row-label">头像</text>
+        <view class="row-core">
+          <image wx:if="{{avatarUrl}}" class="row-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+          <text wx:else class="row-placeholder">点击授权</text>
+        </view>
+        <text class="row-arrow">›</text>
+      </button>
+
+      <!-- 昵称：nickname input 独立接口 -->
+      <view class="row nickname-row">
+        <text class="row-label">昵称</text>
+        <input
+          class="nick-input"
+          type="nickname"
+          value="{{nickname}}"
+          placeholder="点击填写"
+          placeholder-class="ph"
+          bindinput="onNicknameInput"
+          bindblur="onNicknameInput"
+        />
+        <text class="row-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="agreement" bindtap="onToggleAgree">
+      <view class="checkbox {{agreed ? 'checked' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <view class="agree-text-wrap">
+        <text class="agree-text">我已阅读并同意</text>
+        <text class="link" catchtap="onOpenPrivacy">《用户隐私保护指引》</text>
+        <text class="agree-text">与</text>
+        <text class="link" catchtap="onOpenTerms">《用户免责协议》</text>
+      </view>
+    </view>
+
+    <view class="action-bar">
+      <view class="btn-primary {{avatarUrl && nickname && agreed ? '' : 'is-disabled'}}" hover-class="tap" catchtap="onConfirm">
+        {{loading ? '授权中…' : '授权登录'}}
+      </view>
+    </view>
+  </view>
+</view>

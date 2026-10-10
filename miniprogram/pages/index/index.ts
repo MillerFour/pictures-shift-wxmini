@@ -5,6 +5,7 @@ import { EXAMPLE } from '../../constants/examples';
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
 import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
+import { isLoggedIn, type WxUser } from '../../utils/auth';
 import type { StyleMeta } from '../../types';
 
 /**
@@ -62,6 +63,9 @@ Page({
 
     /** 付费墙（占位弹层） */
     showPay: false,
+
+    /** 授权登录弹层：未登录点击上传时弹出 */
+    showLogin: false,
   },
 
   /**
@@ -137,7 +141,22 @@ Page({
   /* ================= 第一步：上传 ================= */
 
   onPickPhoto(): void {
+    // 未登录先弹授权登录；授权完成后由 onLoginSuccess 继续上传流程
+    if (!isLoggedIn()) {
+      this.setData({ showLogin: true });
+      return;
+    }
     void this.pickPhoto();
+  },
+
+  /** 授权登录成功：收起弹层，继续刚才被拦截的上传 */
+  onLoginSuccess(_e: { detail: WxUser }): void {
+    this.setData({ showLogin: false });
+    void this.pickPhoto();
+  },
+
+  onCloseLogin(): void {
+    this.setData({ showLogin: false });
   },
 
   async pickPhoto(): Promise<void> {

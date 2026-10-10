@@ -6,6 +6,25 @@
       <text class="t-body hero-desc">创作次数、记录与账户设置都在这里。</text>
     </view>
 
+    <!-- 未登录：手动登录入口 -->
+    <view wx:if="{{!loggedIn}}" class="login-card card">
+      <view class="col grow">
+        <text class="lc-title">登录后查看创作记录</text>
+        <text class="t-cap">登录可保存你的风格作品与剩余次数</text>
+      </view>
+      <view class="btn-primary lc-btn" hover-class="tap" bindtap="onOpenLogin">微信登录</view>
+    </view>
+
+    <!-- 已登录：用户身份 -->
+    <view wx:else class="user card">
+      <image class="u-avatar" src="{{user.avatarUrl}}" mode="aspectFill" />
+      <view class="col grow">
+        <text class="u-name">{{user.nickname}}</text>
+        <text class="t-cap">微信登录</text>
+      </view>
+      <view class="link-btn" hover-class="none" bindtap="onLogout">退出</view>
+    </view>
+
     <!-- 次数卡片 -->
     <view class="quota card">
       <view class="col">
@@ -44,4 +63,6 @@
   </view>
 
   <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
+
+  <login-modal show="{{showLogin}}" bind:login="onLoginSuccess" bind:close="onCloseLogin" />
 </view>

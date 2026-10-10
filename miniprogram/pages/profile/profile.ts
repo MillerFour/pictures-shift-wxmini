@@ -1,4 +1,5 @@
 import { getQuota, setQuota } from '../../utils/quota';
+import { clearUser, getUser, isLoggedIn, type WxUser } from '../../utils/auth';
 
 interface PayPackageLite {
   id: string;
@@ -17,10 +18,33 @@ Page({
     /** 生成记录占位，真实数据来自后端 */
     records: [] as { id: string; styleName: string; time: string }[],
     showPay: false,
+
+    /** 微信登录态：未登录时给出手动登录入口 */
+    loggedIn: false,
+    user: null as WxUser | null,
+    showLogin: false,
   },
 
   onShow() {
-    this.setData({ quota: getQuota() });
+    this.setData({ quota: getQuota(), loggedIn: isLoggedIn(), user: getUser() });
+  },
+
+  /** 手动登录入口 */
+  onOpenLogin() {
+    this.setData({ showLogin: true });
+  },
+
+  onLoginSuccess(_e: { detail: WxUser }) {
+    this.setData({ showLogin: false, loggedIn: true, user: getUser() });
+  },
+
+  onCloseLogin() {
+    this.setData({ showLogin: false });
+  },
+
+  onLogout() {
+    clearUser();
+    this.setData({ loggedIn: false, user: null });
   },
 
   onBuyPack() {

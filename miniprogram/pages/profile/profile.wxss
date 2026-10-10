@@ -1,6 +1,42 @@
 .hero { padding: 20rpx 0 40rpx; }
 .hero-desc { display: block; margin-top: 20rpx; max-width: 600rpx; }
 
+/* 未登录：手动登录入口 */
+.login-card {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 12rpx;
+}
+.lc-title { font-size: 30rpx; font-weight: 600; }
+.lc-btn { flex: none; width: 200rpx; height: 80rpx; border-radius: var(--r-sm); }
+
+/* 已登录：用户身份 */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 12rpx;
+}
+.u-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  border-radius: 50%;
+  flex: none;
+  background: var(--surface-2);
+}
+.u-name { font-size: 32rpx; font-weight: 600; }
+
+/* 次要文字按钮：退出登录等，不该长得像主按钮 */
+.link-btn {
+  flex: none;
+  font-size: 25rpx;
+  color: var(--accent);
+  padding: 12rpx 4rpx;
+}
+
 .quota {
   display: flex;
   align-items: center;

@@ -6,4 +6,6 @@ export const STORAGE_KEYS = {
   runtimeConfig: 'ps:cache:runtime-config',
   /** 剩余次数（本地占位，真实值来自后端） */
   quota: 'ps:cache:quota',
+  /** 登录用户态（openid / 头像 / 昵称），本地会话占位，真实会话以后端为准 */
+  user: 'ps:user',
 } as const;
