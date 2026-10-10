@@ -1,0 +1,9 @@
+<view class="cmp" catchtouchstart="onTouch" catchtouchmove="onTouch">
+  <image class="cmp-img" src="{{after}}" mode="aspectFill" />
+  <view class="cmp-before" style="width:{{pos}}%">
+    <image class="cmp-img cmp-before-img" src="{{before}}" mode="aspectFill" style="width:{{boxW}}px" />
+  </view>
+  <view class="cmp-handle" style="left:{{pos}}%">
+    <view class="cmp-knob"></view>
+  </view>
+</view>

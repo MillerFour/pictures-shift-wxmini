@@ -1,0 +1,9 @@
+.hero { padding: 20rpx 0 32rpx; }
+.qa { overflow: hidden; }
+.item { border-bottom: 2rpx solid var(--line); }
+.item:last-child { border-bottom: none; }
+.q { display: flex; align-items: center; justify-content: space-between; padding: 32rpx; }
+.q-text { font-size: 28rpx; font-weight: 500; }
+.q-sign { font-size: 36rpx; color: var(--text-3); }
+.a { padding: 0 32rpx 32rpx; }
+.a-text { font-size: 26rpx; color: var(--text-2); line-height: 1.8; }

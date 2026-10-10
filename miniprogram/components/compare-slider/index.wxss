@@ -1,0 +1,81 @@
+/* 固定高度 + aspectFill 裁切填充：控制整屏高度，避免 widthFix 按原图比例撑到上千 rpx */
+.cmp {
+  position: relative;
+  width: 100%;
+  height: 320rpx;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 2rpx solid var(--line);
+  user-select: none;
+}
+
+.cmp-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* 裁剪容器：宽度 = 分割百分比，超出部分被隐藏 */
+.cmp-before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 50%;
+  overflow: hidden;
+}
+
+/* 原图按容器真实像素宽固定，等宽对齐成片 */
+.cmp-before-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* 分割线 + 圆形拖拽钮，不用 emoji，用 CSS 三角做左右箭头暗示 */
+.cmp-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 2rpx;
+  background: #fff;
+  transform: translateX(-50%);
+  box-shadow: 0 0 0 1rpx rgba(25, 25, 23, 0.12);
+}
+
+.cmp-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64rpx;
+  height: 64rpx;
+  margin: -32rpx 0 0 -32rpx;
+  border-radius: 50%;
+  background: #fff;
+  border: 2rpx solid var(--line);
+  box-shadow: 0 2rpx 10rpx rgba(25, 25, 23, 0.18);
+}
+
+.cmp-knob::before,
+.cmp-knob::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin-top: -8rpx;
+  border-top: 8rpx solid transparent;
+  border-bottom: 8rpx solid transparent;
+}
+
+.cmp-knob::before {
+  left: 16rpx;
+  border-right: 10rpx solid var(--text-3);
+}
+
+.cmp-knob::after {
+  right: 16rpx;
+  border-left: 10rpx solid var(--text-3);
+}

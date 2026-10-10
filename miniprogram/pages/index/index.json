@@ -1,7 +1,9 @@
 {
   "navigationBarTitleText": "照片百变",
-  "enablePullDownRefresh": true,
+  "enablePullDownRefresh": false,
   "usingComponents": {
-    "style-card": "/components/style-card/index"
+    "style-card": "/components/style-card/index",
+    "pay-modal": "/components/pay-modal/index",
+    "compare-slider": "/components/compare-slider/index"
   }
 }

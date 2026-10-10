@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="page-body">
+    <view class="hero"><text class="t-title">常见问题</text></view>
+    <view class="qa card">
+      <view wx:for="{{qa}}" wx:key="q" class="item">
+        <view class="q" hover-class="tap" bindtap="onToggle" data-idx="{{index}}">
+          <text class="q-text">{{item.q}}</text>
+          <text class="q-sign">{{open === index ? '−' : '+'}}</text>
+        </view>
+        <view wx:if="{{open === index}}" class="a">
+          <text class="a-text">{{item.a}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,81 @@
+.mask {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 200;
+  background: rgba(25, 25, 23, 0.45);
+  display: flex;
+  align-items: flex-end;
+}
+
+.sheet {
+  width: 100%;
+  background: var(--bg);
+  border-radius: 20rpx 20rpx 0 0;
+  padding: 36rpx 40rpx calc(28rpx + env(safe-area-inset-bottom));
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.close {
+  font-size: 44rpx;
+  color: var(--text-3);
+  line-height: 1;
+  padding: 0 8rpx;
+}
+
+.sub {
+  display: block;
+  margin-top: 8rpx;
+}
+
+.pkgs {
+  display: flex;
+  gap: 18rpx;
+  margin: 32rpx 0 8rpx;
+}
+
+.pkg {
+  position: relative;
+  flex: 1;
+  border: 2rpx solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: 24rpx 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.pkg.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.tag {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 18rpx;
+  color: #fff;
+  background: var(--accent);
+  padding: 4rpx 12rpx;
+  border-radius: 0 var(--r-md) 0 var(--r-sm);
+}
+
+.pkg-name { font-size: 28rpx; font-weight: 600; }
+.pkg-desc { font-size: 20rpx; color: var(--text-3); }
+.pkg-price { font-size: 34rpx; font-weight: 600; margin-top: 8rpx; }
+.pkg-count { font-size: 20rpx; color: var(--text-2); }
+
+.tip {
+  display: block;
+  text-align: center;
+  margin-top: 20rpx;
+}

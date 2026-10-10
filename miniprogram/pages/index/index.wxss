@@ -68,11 +68,6 @@
   padding: 20rpx 0 48rpx;
 }
 
-/* 必须是 block：<text> 默认 inline，两行标题会挤在一行 */
-.hero-title {
-  display: block;
-}
-
 .hero-desc {
   display: block;
   margin-top: 24rpx;
@@ -81,7 +76,8 @@
 
 /* 上传区：只留一个描边框和两行字，没有图标、没有光晕 */
 .uploader {
-  height: 400rpx;
+  height: 320rpx;
+  margin-top: 40rpx;
   border-radius: var(--r-md);
   border: 2rpx dashed var(--line-strong);
   background: var(--surface);
@@ -116,43 +112,6 @@
 
 .block {
   margin-top: 56rpx;
-}
-
-/* 发丝线分隔，比阴影轻，也不会显得卡片化 */
-.rule {
-  height: 2rpx;
-  background: var(--line);
-  margin-bottom: 28rpx;
-}
-
-.pills {
-  margin-top: 20rpx;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14rpx;
-}
-
-.pill {
-  height: 58rpx;
-  padding: 0 20rpx;
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  border: 2rpx solid var(--line);
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-}
-
-.pill-dot {
-  width: 16rpx;
-  height: 16rpx;
-  border-radius: 50%;
-  flex: none;
-}
-
-.pill-name {
-  font-size: 24rpx;
-  color: var(--text-2);
 }
 
 .privacy {
@@ -212,11 +171,11 @@
 .grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .grid-item {
-  width: calc((100% - 20rpx) / 2);
+  width: calc((100% - 16rpx) / 2);
 }
 
 .block-head {
@@ -357,4 +316,28 @@
 @keyframes ps-slide {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(285%); }
+}
+
+/* ---------- 示例 ---------- */
+
+.example-head {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  margin-bottom: 24rpx;
+}
+
+.style-rail {
+  margin-top: 28rpx;
+  width: 100%;
+}
+
+.rail-inner {
+  display: flex;
+  gap: 16rpx;
+  padding: 4rpx;
+}
+
+.rail-chip {
+  flex: none;
 }

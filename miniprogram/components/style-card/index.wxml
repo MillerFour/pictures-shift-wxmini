@@ -1,7 +1,12 @@
-<view class="card {{active ? 'is-active' : ''}}" hover-class="none" bindtap="onTap" data-id="{{styleItem.id}}">
-  <view class="swatch" style="background: {{styleItem.swatch}};"></view>
-  <view class="meta">
+<view class="card {{active ? 'is-active' : ''}} {{compact ? 'compact' : ''}} {{dense ? 'dense' : ''}}" hover-class="none" bindtap="onTap" data-id="{{styleItem.id}}">
+  <block wx:if="{{compact}}">
     <text class="name">{{styleItem.name}}</text>
-    <text class="subtitle">{{styleItem.subtitle}}</text>
-  </view>
+  </block>
+  <block wx:else>
+    <view class="swatch" style="{{active ? 'background: ' + styleItem.swatch : ''}}"></view>
+    <view class="meta">
+      <text class="name">{{styleItem.name}}</text>
+      <text class="subtitle">{{styleItem.subtitle}}</text>
+    </view>
+  </block>
 </view>

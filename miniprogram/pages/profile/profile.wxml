@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="page-body">
+
+    <view class="hero">
+      <text class="t-title">我的</text>
+      <text class="t-body hero-desc">创作次数、记录与账户设置都在这里。</text>
+    </view>
+
+    <!-- 次数卡片 -->
+    <view class="quota card">
+      <view class="col">
+        <text class="t-cap">剩余创作次数</text>
+        <text class="quota-num">{{quota}}</text>
+      </view>
+      <view class="btn-primary buy" hover-class="tap" bindtap="onBuyPack">购买次数包</view>
+    </view>
+
+    <!-- 我的记录 -->
+    <view class="block">
+      <view class="row block-head">
+        <text class="t-h2">我的记录</text>
+      </view>
+      <view wx:if="{{records.length === 0}}" class="empty card">
+        <text class="t-cap">还没有生成记录，去「创作」生成第一张吧。</text>
+      </view>
+    </view>
+
+    <!-- 常用 -->
+    <view class="block">
+      <view class="row block-head"><text class="t-h2">常用</text></view>
+      <view class="menu card">
+        <view class="menu-item" hover-class="tap" bindtap="onGoFaq">
+          <text class="menu-name">常见问题</text><text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" hover-class="tap" bindtap="onContact">
+          <text class="menu-name">联系客服</text><text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item no-line" hover-class="tap" bindtap="onGoDisclaimer">
+          <text class="menu-name">免责声明</text><text class="menu-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+  </view>
+
+  <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
+</view>

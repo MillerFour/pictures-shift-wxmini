@@ -1,0 +1,28 @@
+.hero { padding: 20rpx 0 40rpx; }
+.hero-desc { display: block; margin-top: 20rpx; max-width: 600rpx; }
+
+.quota {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36rpx 32rpx;
+}
+.quota-num { font-size: 64rpx; font-weight: 600; line-height: 1.1; margin-top: 8rpx; }
+.buy { width: 240rpx; flex: none; }
+
+.block { margin-top: 48rpx; }
+.block-head { margin-bottom: 20rpx; }
+
+.empty { padding: 40rpx 32rpx; }
+
+.menu { overflow: hidden; }
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 2rpx solid var(--line);
+}
+.menu-item.no-line { border-bottom: none; }
+.menu-name { font-size: 28rpx; }
+.menu-arrow { font-size: 32rpx; color: var(--text-3); }

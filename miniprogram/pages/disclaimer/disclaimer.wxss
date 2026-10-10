@@ -1,0 +1,9 @@
+.hero { padding: 20rpx 0 32rpx; }
+.doc {
+  padding: 40rpx 32rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+.doc-p { font-size: 27rpx; color: var(--text-2); line-height: 1.8; }
+.note { display: block; margin-top: 24rpx; }

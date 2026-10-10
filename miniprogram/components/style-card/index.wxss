@@ -18,11 +18,14 @@
 }
 
 /*
- * 纯色块，不做渐变、不叠高光、不放 emoji。
- * 画风之间的区分靠色相，不靠装饰。
+ * 未选中时为中性占位块（浅暖灰），避免「四种颜色同时在场」
+ * 破坏全局「一次只出现一个强调色」的原则；
+ * 仅选中态由 wxml 内联注入该风格色。画风之间的区分靠选中着色，不靠装饰。
  */
 .swatch {
   height: 168rpx;
+  background: var(--surface-2);
+  transition: background 0.15s ease;
 }
 
 .meta {
@@ -46,4 +49,29 @@
   font-size: 21rpx;
   color: var(--text-3);
   line-height: 1.45;
+}
+
+/* 紧凑芯片态：用于 landing 横滑选画风，只留名字、压低竖高。
+   选中态沿用 .card.is-active（描边 + 名字着 accent），全屏同时至多一个强调色。 */
+.card.compact {
+  display: inline-flex;
+  align-items: center;
+  height: 68rpx;
+  padding: 0 32rpx;
+  border-radius: 999rpx;
+}
+
+/* 密度档：仍是两列卡片，仅缩短色块 + 收紧内边距，用于第二步降低高度占用。
+   选色预览与名称/副标题都保留，只是整体更扁。 */
+.card.dense .swatch {
+  height: 116rpx;
+}
+
+.card.dense .meta {
+  padding: 16rpx 20rpx 18rpx;
+}
+
+.card.compact .name {
+  font-size: 27rpx;
+  font-weight: 500;
 }

@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "我的",
+  "usingComponents": {
+    "pay-modal": "/components/pay-modal/index"
+  }
+}

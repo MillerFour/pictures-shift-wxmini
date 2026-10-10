@@ -1,8 +1,10 @@
 import { ENV } from '../../config/env';
 import { createTask, loadRuntimeConfig, loadStyles, waitTask } from '../../services/api';
 import { STYLE_FALLBACK } from '../../constants/styles';
+import { EXAMPLE } from '../../constants/examples';
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
+import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
 import type { StyleMeta } from '../../types';
 
 /**
@@ -25,6 +27,10 @@ Page({
     step: 'upload' as Step,
     /** 步骤条用：1 / 2 / 3。由 goStep 统一维护，不要手动改 */
     stepIdx: 1,
+
+    /** 示例：原图与成片（成片缺省回退原图；成片跟随当前选中画风） */
+    exampleOriginal: EXAMPLE.original,
+    exampleAfter: EXAMPLE.after[FALLBACK_STYLE.id] ?? EXAMPLE.original,
 
     styles: [] as StyleMeta[],
     styleId: FALLBACK_STYLE.id,
@@ -53,6 +59,9 @@ Page({
     revealed: false,
     showOriginal: false,
     saving: false,
+
+    /** 付费墙（占位弹层） */
+    showPay: false,
   },
 
   /**
@@ -71,10 +80,6 @@ Page({
   onUnload() {
     this.alive = false;
     this.stopFakeProgress();
-  },
-
-  onPullDownRefresh() {
-    void this.hydrate().finally(() => wx.stopPullDownRefresh());
   },
 
   onShareAppMessage() {
@@ -100,7 +105,12 @@ Page({
   syncSelection(styleId: string): void {
     const picked = this.data.styles.find((s) => s.id === styleId);
     const name = picked?.name ?? '';
-    this.setData({ styleId, styleName: name, submitLabel: `生成${name}风格` });
+    this.setData({
+      styleId,
+      styleName: name,
+      submitLabel: `生成${name}风格`,
+      exampleAfter: EXAMPLE.after[styleId] ?? EXAMPLE.original,
+    });
   },
 
   /** 拉风格与运行期配置；失败退回内置数据，不打断用户 */
@@ -110,8 +120,9 @@ Page({
 
     if (styles.status === 'fulfilled' && styles.value.length > 0) {
       // 默认选中一个，用户一进第二屏就有可提交的选择，不用先点一下
-      this.setData({ styles: styles.value });
-      this.syncSelection(this.data.styles.find((s) => s.id === this.data.styleId)?.id ?? this.data.styles[0].id);
+      const list = styles.value;
+      this.setData({ styles: list });
+      this.syncSelection(list.find((s) => s.id === this.data.styleId)?.id ?? list[0].id);
     } else {
       this.setData({ styles: STYLE_FALLBACK });
     }
@@ -185,6 +196,13 @@ Page({
     }
     if (this.data.submitting) return;
 
+    // 付费墙（占位拦截）：真实配额来自后端，这里读本地占位值。
+    // 文件上传与配额 / 支付 API 对接暂作预留 —— 硬拦截在真实配额接口就绪后启用。
+    if (getQuota() <= 0) {
+      this.setData({ showPay: true });
+      return;
+    }
+
     this.setData({
       submitting: true,
       progress: 0,
@@ -221,6 +239,8 @@ Page({
         resultUrl: detail.resultUrl,
         costText: detail.costMs ? formatCost(detail.costMs) : '',
       });
+      // 生成成功扣减一次（仅占位，真实扣减以后端为准）
+      consumeQuota();
       this.goStep('result');
       // 等一拍再淡入：直接置 true 会让图片在解码前就开始过渡，看到的是白底
       setTimeout(() => {
@@ -317,5 +337,19 @@ Page({
       indeterminate: false,
     });
     this.goStep('upload');
+  },
+
+  /* ================= 付费墙（占位） ================= */
+
+  onClosePay(): void {
+    this.setData({ showPay: false });
+  },
+
+  onBuyPay(e: { detail: { count: number } }): void {
+    // TODO: 微信支付 API 对接暂作预留；此处模拟购买并本地授予次数。
+    const count = e.detail?.count ?? 0;
+    setQuota(getQuota() + count);
+    this.setData({ showPay: false });
+    wx.showToast({ title: '购买成功（模拟）', icon: 'success' });
   },
 });

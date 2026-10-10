@@ -1,0 +1,13 @@
+<view class="page">
+  <view class="page-body">
+    <view class="hero">
+      <text class="t-title">免责声明</text>
+    </view>
+    <view class="card doc">
+      <text class="doc-p">用户对其上传的原始照片，以及经本平台 AI 风格化处理所生成的图片，均享有完整的著作权与所有权。</text>
+      <text class="doc-p">本平台仅作为技术服务提供者，为用户提供图像处理能力，不对相关内容主张任何权利。</text>
+      <text class="doc-p">若您认为平台内任何内容涉嫌侵权，请通过客服与我们联系，我们将在核实后及时下架并处理。</text>
+    </view>
+    <text class="t-cap note">本声明为占位文本，正式上线前将由法务复核。</text>
+  </view>
+</view>

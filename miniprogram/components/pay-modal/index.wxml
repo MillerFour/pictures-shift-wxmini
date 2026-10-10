@@ -1,0 +1,31 @@
+<view wx:if="{{show}}" class="mask" catchtap="onClose">
+  <view class="sheet" catchtap="noop">
+    <view class="head">
+      <text class="t-h2">购买次数包</text>
+      <view class="close" hover-class="none" catchtap="onClose">×</view>
+    </view>
+    <text class="t-cap sub">解锁高清下载与更多创作次数</text>
+
+    <view class="pkgs">
+      <view
+        wx:for="{{packages}}"
+        wx:key="id"
+        class="pkg {{selectedId === item.id ? 'is-active' : ''}}"
+        hover-class="none"
+        catchtap="onSelect"
+        data-id="{{item.id}}"
+      >
+        <view wx:if="{{item.tag}}" class="tag">{{item.tag}}</view>
+        <text class="pkg-name">{{item.name}}</text>
+        <text class="pkg-desc">{{item.desc}}</text>
+        <text class="pkg-price">{{item.price}}</text>
+        <text class="pkg-count">{{item.count}} 次</text>
+      </view>
+    </view>
+
+    <view class="action-bar">
+      <view class="btn-primary" hover-class="tap" catchtap="onBuy">微信支付</view>
+    </view>
+    <text class="t-cap tip">支付能力与套餐定价为占位，最终以实际上线为准</text>
+  </view>
+</view>

@@ -1,51 +1,56 @@
 <view class="page">
 
-  <!-- 步骤条：细线 + 小点，不用彩色实心圆 -->
-  <view class="steps">
+  <!-- 步骤条：细线 + 小点，不用彩色实心圆。引导页（上传步）先不显示，进入正式流程后再出现 -->
+  <view class="steps" wx:if="{{step !== 'upload'}}">
     <view class="step {{stepIdx >= 1 ? 'is-on' : ''}} {{stepIdx > 1 ? 'is-done' : ''}}">
       <view class="step-dot"></view>
-      <text class="step-label">上传</text>
+      <text class="step-label">上传照片</text>
     </view>
     <view class="step-line {{stepIdx >= 2 ? 'is-on' : ''}}"></view>
     <view class="step {{stepIdx >= 2 ? 'is-on' : ''}} {{stepIdx > 2 ? 'is-done' : ''}}">
       <view class="step-dot"></view>
-      <text class="step-label">画风</text>
+      <text class="step-label">选择风格</text>
     </view>
     <view class="step-line {{stepIdx >= 3 ? 'is-on' : ''}}"></view>
     <view class="step {{stepIdx >= 3 ? 'is-on' : ''}}">
       <view class="step-dot"></view>
-      <text class="step-label">成片</text>
+      <text class="step-label">AI成片</text>
     </view>
   </view>
 
-  <!-- ============ 第一步：上传 ============ -->
+  <!-- ============ 第一步：上传 + 示例引导 ============ -->
+  <!-- 示例滑块直接做主视觉：先拖动看效果、顺手挑好画风，再上传自己的照片 -->
   <block wx:if="{{step === 'upload'}}">
     <view class="page-body">
 
       <view class="hero">
-        <text class="t-title">上传一张照片</text>
-        <text class="t-title">十几秒后换一种画风</text>
-        <text class="t-body hero-desc">
-          从相册选一张，或者直接拍一张。吉卜力、日系动漫、3D 卡通、复古胶片，四种画风任选。
-        </text>
+        <text class="t-title">定格生活瞬间，一键换成多样艺术风格</text>
       </view>
+
+      <view class="example-head">
+        <text class="t-h2">拖动滑块，先睹为快</text>
+        <text class="t-cap">同一画面，不同画风，挑一个你喜欢的</text>
+      </view>
+
+      <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />
+
+      <scroll-view scroll-x class="style-rail" enhanced show-scrollbar="{{false}}">
+        <view class="rail-inner">
+          <style-card
+            wx:for="{{styles}}"
+            wx:key="id"
+            class="rail-chip"
+            style-item="{{item}}"
+            active="{{item.id === styleId}}"
+            compact
+            bind:select="onSelectStyle"
+          />
+        </view>
+      </scroll-view>
 
       <view class="uploader" hover-class="uploader-hover" bindtap="onPickPhoto">
-        <text class="uploader-title">选择照片</text>
+        <text class="uploader-title">上传照片，换成{{styleName}}</text>
         <text class="uploader-sub">JPG / PNG / WebP，{{maxSizeMB}}MB 以内</text>
-      </view>
-
-      <text class="t-cap note">正脸、光线均匀、背景简单的照片出片最好看。</text>
-
-      <view class="block">
-        <view class="rule"></view>
-        <text class="t-cap">画风</text>
-        <view class="pills">
-          <view wx:for="{{styles}}" wx:key="id" class="pill">
-            <view class="pill-dot" style="background: {{item.swatch}};"></view>
-            <text class="pill-name">{{item.name}}</text>
-          </view>
-        </view>
       </view>
 
       <text class="t-cap privacy">照片只用于本次风格化，处理完即从服务端内存清除，不写入数据库。</text>
@@ -79,6 +84,7 @@
           class="grid-item"
           style-item="{{item}}"
           active="{{item.id === styleId}}"
+          dense
           bind:select="onSelectStyle"
         />
       </view>
@@ -112,7 +118,10 @@
     </view>
 
     <view class="action-bar">
-      <view class="btn-primary" bindtap="onSubmit">{{submitLabel}}</view>
+      <view class="row" style="gap:16rpx">
+        <view class="btn-ghost grow" hover-class="btn-ghost-hover" bindtap="onReset">取 消</view>
+        <view class="btn-primary grow" bindtap="onSubmit">{{submitLabel}}</view>
+      </view>
     </view>
   </block>
 
@@ -164,5 +173,8 @@
       </view>
     </view>
   </view>
+
+  <!-- ============ 付费墙（占位弹层） ============ -->
+  <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
 
 </view>

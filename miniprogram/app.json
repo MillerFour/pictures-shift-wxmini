@@ -1,7 +1,20 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/index/index",
+    "pages/profile/profile",
+    "pages/disclaimer/disclaimer",
+    "pages/faq/faq"
   ],
+  "tabBar": {
+    "color": "#9d998f",
+    "selectedColor": "#191917",
+    "backgroundColor": "#f7f6f3",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "创作" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
   "window": {
     "navigationBarBackgroundColor": "#0a0c11",
     "navigationBarTitleText": "照片百变",
@@ -10,11 +23,6 @@
     "backgroundColorTop": "#0a0c11",
     "backgroundColorBottom": "#0a0c11",
     "backgroundTextStyle": "light"
-  },
-  "permission": {
-    "scope.writePhotosAlbum": {
-      "desc": "用于把生成的作品保存到你的手机相册"
-    }
   },
   "style": "v2",
   "lazyCodeLoading": "requiredComponents",
