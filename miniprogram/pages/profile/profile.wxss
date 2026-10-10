@@ -10,6 +10,12 @@
   margin-bottom: 12rpx;
 }
 .lc-title { font-size: 30rpx; font-weight: 600; }
+.lc-points {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+  margin-top: 10rpx;
+}
 .lc-btn { flex: none; width: 200rpx; height: 80rpx; border-radius: var(--r-sm); }
 
 /* 已登录：用户身份 */

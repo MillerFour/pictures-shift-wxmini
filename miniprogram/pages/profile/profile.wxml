@@ -9,8 +9,11 @@
     <!-- 未登录：手动登录入口 -->
     <view wx:if="{{!loggedIn}}" class="login-card card">
       <view class="col grow">
-        <text class="lc-title">登录后查看创作记录</text>
-        <text class="t-cap">登录可保存你的风格作品与剩余次数</text>
+        <text class="lc-title">登录解锁创作</text>
+        <view class="lc-points">
+          <text class="t-cap">· 领取 10 次免费创作次数</text>
+          <text class="t-cap">· 查看剩余次数与历史作品</text>
+        </view>
       </view>
       <view class="btn-primary lc-btn" hover-class="tap" bindtap="onOpenLogin">微信登录</view>
     </view>
@@ -25,8 +28,8 @@
       <view class="link-btn" hover-class="none" bindtap="onLogout">退出</view>
     </view>
 
-    <!-- 次数卡片 -->
-    <view class="quota card">
+    <!-- 次数卡片：仅登录后展示剩余创作次数与购买入口 -->
+    <view wx:if="{{loggedIn}}" class="quota card">
       <view class="col">
         <text class="t-cap">剩余创作次数</text>
         <text class="quota-num">{{quota}}</text>
@@ -34,8 +37,8 @@
       <view class="btn-primary buy" hover-class="tap" bindtap="onBuyPack">购买次数包</view>
     </view>
 
-    <!-- 我的记录 -->
-    <view class="block">
+    <!-- 我的记录：仅登录后展示 -->
+    <view wx:if="{{loggedIn}}" class="block">
       <view class="row block-head">
         <text class="t-h2">我的记录</text>
       </view>
