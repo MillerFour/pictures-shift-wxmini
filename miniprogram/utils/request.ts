@@ -1,6 +1,6 @@
 import { ENV } from '../config/env';
 import { ApiError, TRANSPORT_CODES } from './error';
-import type { ApiEnvelope } from '../types';
+import { ApiEnvelope } from '../types';
 
 interface RequestOptions {
   url: string;

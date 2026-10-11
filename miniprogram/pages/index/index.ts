@@ -8,7 +8,7 @@ import { toFriendlyMessage } from '../../utils/error';
 import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
 import { setTabBarHidden, syncTabBarFromPage, TAB_BAR_RPX_HEIGHT } from '../../utils/tabbar';
 import { isLoggedIn, type WxUser } from '../../utils/auth';
-import type { StyleMeta } from '../../types';
+import { StyleMeta } from '../../types';
 
 /**
  * 单页三步向导：上传 → 选风格 → 出图。

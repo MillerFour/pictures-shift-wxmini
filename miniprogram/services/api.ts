@@ -4,7 +4,7 @@ import { CONFIG_FALLBACK, STYLE_FALLBACK } from '../constants/styles';
 import { readCache, writeCache } from '../utils/cache';
 import { ApiError, TRANSPORT_CODES } from '../utils/error';
 import { request } from '../utils/request';
-import type { CreateTaskResponse, RuntimeConfig, StyleMeta, TaskDetail, TaskStatus } from '../types';
+import { CreateTaskResponse, RuntimeConfig, StyleMeta, TaskDetail, TaskStatus } from '../types';
 
 const TTL = {
   styles: 6 * 60 * 60 * 1000,

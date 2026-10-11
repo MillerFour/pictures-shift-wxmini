@@ -1,4 +1,4 @@
-import type { RuntimeConfig, StyleMeta } from '../types';
+import { RuntimeConfig, StyleMeta } from '../types';
 
 /**
  * 风格的本地兜底数据。
