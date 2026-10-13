@@ -1,0 +1,12 @@
+{
+  "name": "generatelmage-NGR4JB",
+  "version": "1.0.0",
+  "description": "照片百变生图云函数：接收原图 fileID + 风格 id，同步出图并返回结果图 fileID/直链",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

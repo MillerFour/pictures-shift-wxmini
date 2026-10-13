@@ -1,4 +1,11 @@
 import { warmup } from './services/api'
+import { CLOUD_ENV } from './config/env'
+
+// 初始化微信云开发。必须在任何 wx.cloud.* 调用之前执行一次。
+wx.cloud.init({
+  env: CLOUD_ENV,
+  traceUser: true,
+});
 
 App({
   onLaunch() {

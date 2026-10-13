@@ -1,6 +1,7 @@
 import { getQuota, setQuota } from '../../utils/quota';
-import { syncTabBarFromPage } from '../../utils/tabbar';
+import { setTabBarHidden, syncTabBarFromPage } from '../../utils/tabbar';
 import { clearUser, getUser, isLoggedIn, type WxUser } from '../../utils/auth';
+import { resolveAvatar } from '../../utils/cloud';
 
 interface PayPackageLite {
   id: string;
@@ -24,10 +25,14 @@ Page({
     loggedIn: false,
     user: null as WxUser | null,
     showLogin: false,
+    /** 头像直链（由云存储 fileID 经 getTempFileURL 换取），WXML 用此展示 */
+    avatarDisplayUrl: '',
   },
 
   onShow() {
-    this.setData({ quota: getQuota(), loggedIn: isLoggedIn(), user: getUser() });
+    const user = getUser();
+    this.setData({ quota: getQuota(), loggedIn: isLoggedIn(), user });
+    this.refreshAvatar(user);
     // 高亮由本页自己同步：onShow 时 route 必然正确，不受框架复用 tabBar 实例的时序影响
     syncTabBarFromPage(this);
   },
@@ -39,6 +44,9 @@ Page({
 
   onLoginSuccess(_e: { detail: WxUser }) {
     this.setData({ showLogin: false, loggedIn: true, user: getUser() });
+    // 登录弹层隐藏过底部菜单，这里立即恢复
+    setTabBarHidden(false);
+    this.refreshAvatar(getUser());
   },
 
   onCloseLogin() {
@@ -47,7 +55,18 @@ Page({
 
   onLogout() {
     clearUser();
-    this.setData({ loggedIn: false, user: null });
+    this.setData({ loggedIn: false, user: null, avatarDisplayUrl: '' });
+  },
+
+  /** 头像存的是云存储 fileID，需换成临时直链才能渲染 */
+  refreshAvatar(user: WxUser | null) {
+    if (user?.avatarFileID) {
+      resolveAvatar(user.avatarFileID)
+        .then((url) => this.setData({ avatarDisplayUrl: url }))
+        .catch(() => this.setData({ avatarDisplayUrl: user?.avatarUrl || '' }));
+    } else {
+      this.setData({ avatarDisplayUrl: user?.avatarUrl || '' });
+    }
   },
 
   onBuyPack() {

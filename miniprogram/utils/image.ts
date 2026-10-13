@@ -63,7 +63,8 @@ export async function chooseImage(): Promise<PreparedImage | null> {
 
 /** 下载远程图片到本地临时文件 */
 export function downloadImage(url: string): Promise<string> {
-  const full = /^https?:/.test(url) ? url : ENV.API_BASE + url;
+  // 云存储临时直链 / 结果图 URL 已是完整地址，无需再拼 API_BASE
+  const full = url;
   return new Promise((resolve, reject) => {
     wx.downloadFile({
       url: full,

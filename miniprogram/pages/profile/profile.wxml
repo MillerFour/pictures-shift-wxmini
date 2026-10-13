@@ -20,7 +20,7 @@
 
     <!-- 已登录：用户身份 -->
     <view wx:else class="user card">
-      <image class="u-avatar" src="{{user.avatarUrl}}" mode="aspectFill" />
+      <image class="u-avatar" src="{{avatarDisplayUrl}}" mode="aspectFill" />
       <view class="col grow">
         <text class="u-name">{{user.nickname}}</text>
         <text class="t-cap">微信登录</text>

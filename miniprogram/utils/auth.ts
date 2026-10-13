@@ -1,22 +1,22 @@
 import { STORAGE_KEYS } from '../constants/keys';
 
 /**
- * 登录用户态。
+ * 登录用户态（本地会话）。
  *
- * 这里是「应用级会话」：小程序没有本地可读的微信 openid，必须走
- * wx.login 拿 code、再由后端换 openid（见 services/auth）。头像与昵称
- * 则由用户在授权弹层里通过 chooseAvatar / nickname 输入显式授予。
- *
- * 本仓库后端尚未打通时，会话以本地存储为准；接好后端后这套逻辑不变，
- * 只是 openid 从「兜底伪值」换成「真实值」。
+ * 真实微信 openid 由云函数侧 cloud.getWXContext().OPENID 获取（前端无法伪造，
+ * 见 services/auth 的 login 函数），这里只负责把云函数回写的 openid 与用户
+ * 授权的头像、昵称持久化到本地存储，供页面判断是否已登录。
  */
+
 export interface WxUser {
   /** 微信 openid，账户唯一标识 */
   openid: string;
   /** 昵称（用户授权） */
   nickname: string;
-  /** 头像地址（chooseAvatar 给的临时路径，真实环境应上传后换成 CDN 地址） */
-  avatarUrl: string;
+  /** 头像在云存储的 fileID；展示时需经 getTempFileURL 换直链，避免微信临时路径失效 */
+  avatarFileID: string;
+  /** 旧版兼容：可直接展示的头像直链（可选） */
+  avatarUrl?: string;
 }
 
 /** 读取已登录用户；缺失或结构不全返回 null */
@@ -41,20 +41,4 @@ export function saveUser(user: WxUser): void {
 
 export function clearUser(): void {
   wx.removeStorageSync(STORAGE_KEYS.user);
-}
-
-/**
- * 封装 wx.login 为 Promise。
- * 拿到的 code 一次性有效，仅用于交给后端换 openid，不要本地留存。
- */
-export function wxLogin(): Promise<string> {
-  return new Promise((resolve, reject) => {
-    wx.login({
-      success: (res) => {
-        if (res.code) resolve(res.code);
-        else reject(new Error('微信登录失败：未返回 code'));
-      },
-      fail: (e) => reject(new Error(e.errMsg || '微信登录失败')),
-    });
-  });
 }

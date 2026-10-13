@@ -1,6 +1,7 @@
-import { saveUser, wxLogin, type WxUser } from '../../utils/auth';
+import { saveUser, type WxUser } from '../../utils/auth';
 import { setTabBarHidden } from '../../utils/tabbar';
-import { loginWithCode } from '../../services/auth';
+import { checkUser, login } from '../../services/auth';
+import { uploadAvatar } from '../../utils/cloud';
 
 /**
  * 授权登录弹层，首页上传拦截与「我的」手动登录共用。
@@ -23,8 +24,26 @@ Component({
    * 所以弹层开合时让 tabBar 跟着显隐（见 utils/tabbar）。
    */
   observers: {
-    show(val: boolean) {
+    async show(val: boolean) {
       setTabBarHidden(val);
+      if (!val) return;
+      // 打开即先用 openid 查云端是否已注册：
+      // 已注册 -> 直接回写本地会话并登录成功，不再弹授权表单；
+      // 未注册 / 查库失败 -> 显示表单，引导用户授权头像昵称建档。
+      this.setData({ checking: true });
+      try {
+        const res = await checkUser();
+        if (res.exists && res.user) {
+          saveUser(res.user);
+          this.triggerEvent('login', res.user);
+          this.triggerEvent('close');
+          return;
+        }
+      } catch {
+        // 查库异常降级为显示授权表单，让用户走手动登录
+      } finally {
+        this.setData({ checking: false });
+      }
     },
   },
 
@@ -41,6 +60,8 @@ Component({
     /** 隐私协议必须显式勾选，符合微信小程序用户信息收集规范 */
     agreed: false,
     loading: false,
+    /** 打开时先用 openid 查云端注册状态的加载态 */
+    checking: false,
   },
 
   methods: {
@@ -93,12 +114,16 @@ Component({
       }
       this.setData({ loading: true });
       try {
-        const code = await wxLogin();
-        const { openid } = await loginWithCode(code);
+        // 微信给的头像是临时路径，先上传云存储换 fileID 再存库，避免失效
+        const avatarFileID = await uploadAvatar(this.data.avatarUrl);
+        const { openid } = await login({
+          nickname: this.data.nickname,
+          avatarFileID,
+        });
         const user: WxUser = {
           openid,
           nickname: this.data.nickname,
-          avatarUrl: this.data.avatarUrl,
+          avatarFileID,
         };
         saveUser(user);
         this.triggerEvent('login', user);

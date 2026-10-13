@@ -3,6 +3,7 @@
   "projectname": "pictures-shift-wxmini",
   "compileType": "miniprogram",
   "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "appid": "wx172e9e7b0ba3bde9",
   "libVersion": "3.6.0",
   "setting": {

@@ -80,5 +80,9 @@ export function syncTabBarFromPage(page: PageLike): void {
   const route = normalize(page.route);
   const selected = TAB_LIST.findIndex((i) => normalize(i.path) === route);
   if (selected < 0) return;
+  // 首页向导进入内页（选风格/出图）时隐藏底部菜单；上传步骤与「我的」页正常显示
+  const step = (page as { data?: { step?: string } }).data?.step;
+  const innerPage = route === 'pages/index/index' && (step === 'style' || step === 'result');
+  hidden = innerPage;
   bar.setData({ selected, hidden });
 }

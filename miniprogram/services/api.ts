@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from '../constants/keys';
 import { CONFIG_FALLBACK, STYLE_FALLBACK } from '../constants/styles';
 import { readCache, writeCache } from '../utils/cache';
 import { ApiError, TRANSPORT_CODES } from '../utils/error';
-import { request } from '../utils/request';
+import { callFunction, uploadSource } from '../utils/cloud';
 import { CreateTaskResponse, RuntimeConfig, StyleMeta, TaskDetail, TaskStatus } from '../types';
 
 const TTL = {
@@ -19,19 +19,27 @@ export function warmup(): Promise<unknown> {
 export async function loadStyles(): Promise<StyleMeta[]> {
   const cached = readCache<StyleMeta[]>(STORAGE_KEYS.styles, TTL.styles);
   if (cached?.length) return cached;
-  const remote = await request<StyleMeta[]>({ url: '/api/styles' });
-  const styles = Array.isArray(remote) && remote.length ? remote : STYLE_FALLBACK;
-  writeCache(STORAGE_KEYS.styles, styles);
-  return styles;
+  try {
+    const remote = await callFunction<StyleMeta[]>('styles');
+    const styles = Array.isArray(remote) && remote.length ? remote : STYLE_FALLBACK;
+    writeCache(STORAGE_KEYS.styles, styles);
+    return styles;
+  } catch {
+    return STYLE_FALLBACK;
+  }
 }
 
 export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
   const cached = readCache<RuntimeConfig>(STORAGE_KEYS.runtimeConfig, TTL.config);
   if (cached) return cached;
-  const remote = await request<RuntimeConfig>({ url: '/api/config' });
-  const config = { ...CONFIG_FALLBACK, ...remote };
-  writeCache(STORAGE_KEYS.runtimeConfig, config);
-  return config;
+  try {
+    const remote = await callFunction<RuntimeConfig>('config');
+    const config = { ...CONFIG_FALLBACK, ...remote };
+    writeCache(STORAGE_KEYS.runtimeConfig, config);
+    return config;
+  } catch {
+    return CONFIG_FALLBACK;
+  }
 }
 
 export interface CreateTaskParams {
@@ -42,48 +50,26 @@ export interface CreateTaskParams {
 }
 
 /**
- * 上传原图并创建转换任务。
+ * 选图并创建风格化任务。
  *
- * 用 wx.uploadFile 而非「转 base64 再 wx.request」：
- * base64 会让体积膨胀约 1/3，大图很容易撞上小程序请求体上限。
+ * 流程：原图先传云存储拿 fileID，再调云函数 create，由云函数后台异步出图。
+ * 不再用 wx.uploadFile 打自有服务器。
  */
 export function createTask(
   params: CreateTaskParams,
   onProgress?: (percent: number) => void,
 ): Promise<CreateTaskResponse> {
-  return new Promise((resolve, reject) => {
-    const task = wx.uploadFile({
-      url: ENV.API_BASE + '/api/convert',
-      filePath: params.filePath,
-      name: 'photo',
-      formData: { styleId: params.styleId, strength: String(params.strength) },
-      timeout: ENV.UPLOAD_TIMEOUT,
-      success: (res) => {
-        let body: { code?: number; message?: string; data?: CreateTaskResponse } | null = null;
-        try {
-          body = JSON.parse(res.data);
-        } catch {
-          reject(new ApiError(res.statusCode, TRANSPORT_CODES.BAD_RESPONSE, '服务返回格式异常'));
-          return;
-        }
-        if (res.statusCode < 200 || res.statusCode >= 300 || !body || body.code !== 0 || !body.data) {
-          reject(new ApiError(res.statusCode, String(body?.code ?? ''), body?.message || '提交失败'));
-          return;
-        }
-        resolve(body.data);
-      },
-      fail: (e) => {
-        const msg = e.errMsg ?? '';
-        const code = msg.includes('timeout') ? TRANSPORT_CODES.TIMEOUT : TRANSPORT_CODES.NETWORK;
-        reject(new ApiError(0, code, msg || '上传失败'));
-      },
-    });
-    if (onProgress) task.onProgressUpdate((e) => onProgress(e.progress));
-  });
+  return uploadSource(params.filePath, onProgress).then((fileID) =>
+    callFunction<CreateTaskResponse>('create', {
+      fileID,
+      styleId: params.styleId,
+      strength: params.strength,
+    }),
+  );
 }
 
 export function fetchTask(taskId: string): Promise<TaskDetail> {
-  return request<TaskDetail>({ url: `/api/tasks/${encodeURIComponent(taskId)}` });
+  return callFunction<TaskDetail>('getTask', { taskId });
 }
 
 export function isTerminal(status: TaskStatus): boolean {
@@ -93,8 +79,8 @@ export function isTerminal(status: TaskStatus): boolean {
 /**
  * 轮询直到任务进入终态。
  *
- * 必须设上限：弱网或后端重启时，无上限轮询会让 loading 一直挂着，
- * 也会持续打后端。到达上限按超时抛错，让用户能重试。
+ * 必须设上限：弱网或云函数重启时，无上限轮询会让 loading 一直挂着。
+ * 到达上限按超时抛错，让用户能重试。
  */
 export async function waitTask(
   taskId: string,
@@ -111,4 +97,41 @@ export async function waitTask(
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** 生图云函数名（在微信开发者工具里部署时使用的函数名） */
+export const GENERATE_FUNCTION = 'generatelmage-NGR4JB';
+
+/** 生图为同步等待，耗时较长；前端超时放宽到 60s（需与云函数控制台超时配置保持一致） */
+export const GEN_TIMEOUT = 60000;
+
+export interface GenerateParams {
+  filePath: string;
+  styleId: string;
+  /** 0-100 */
+  strength: number;
+}
+
+export interface GenerateResponse {
+  resultFileID: string;
+  resultUrl?: string;
+  costMs?: number;
+}
+
+/**
+ * 同步生图：上传原图到云存储拿 fileID，调 generatelmage 云函数一次出图，
+ * 直接返回生成图的 fileID 与临时直链，无需轮询。
+ */
+export function generateImage(
+  params: GenerateParams,
+  onProgress?: (percent: number) => void,
+): Promise<GenerateResponse> {
+  return uploadSource(params.filePath, onProgress).then((fileID) =>
+    callFunction<GenerateResponse>(
+      'generate',
+      { fileID, styleId: params.styleId, strength: params.strength },
+      GENERATE_FUNCTION,
+      GEN_TIMEOUT,
+    ),
+  );
 }

@@ -1,5 +1,5 @@
-import { ENV } from '../../config/env';
-import { createTask, loadRuntimeConfig, loadStyles, waitTask } from '../../services/api';
+import { generateImage, loadRuntimeConfig, loadStyles } from '../../services/api';
+import { resolveTempUrl } from '../../utils/cloud';
 import { STYLE_FALLBACK } from '../../constants/styles';
 import { EXAMPLE, exampleAfterOf } from '../../constants/examples';
 
@@ -61,6 +61,7 @@ Page({
 
     /** 结果 */
     resultUrl: '',
+    resultFileID: '',
     costText: '',
     revealed: false,
     showOriginal: false,
@@ -138,7 +139,7 @@ Page({
     return {
       title: ready ? `我把自拍变成了${styleName}风格 · 照片百变` : '照片百变 · 上传照片一键换画风',
       path: '/pages/index/index',
-      imageUrl: ready ? ENV.API_BASE + resultUrl : '',
+      imageUrl: ready ? resultUrl : '',
     };
   },
 
@@ -148,6 +149,9 @@ Page({
    */
   goStep(step: Step): void {
     this.setData({ step, stepIdx: step === 'upload' ? 1 : step === 'style' ? 2 : 3 });
+    // 首页向导进入内页（选风格/出图）时隐藏底部菜单；回到上传步骤恢复显示。
+    // 生成中的隐藏由 submit 开头单独控制，且早于 goStep('result')，不冲突。
+    setTabBarHidden(step !== 'upload');
   },
 
   /** 同步选中画风 + 主按钮文案 + 示例预览：画风相关的展示全部收在这里，不散落 */
@@ -197,6 +201,7 @@ Page({
   /** 授权登录成功：收起弹层，继续刚才被拦截的上传 */
   onLoginSuccess(_e: { detail: WxUser }): void {
     this.setData({ showLogin: false });
+    // 登录后立刻进入上传向导内页，底部菜单由 goStep 按步骤控制，这里无需恢复
     void this.pickPhoto();
   },
 
@@ -261,7 +266,6 @@ Page({
     if (this.data.submitting) return;
 
     // 付费墙（占位拦截）：真实配额来自后端，这里读本地占位值。
-    // 文件上传与配额 / 支付 API 对接暂作预留 —— 硬拦截在真实配额接口就绪后启用。
     if (getQuota() <= 0) {
       this.setData({ showPay: true });
       return;
@@ -274,11 +278,11 @@ Page({
       phaseText: '正在上传原图',
       phaseHint: '照片越大上传越慢，稍等一下',
     });
-    // 生成中是整屏遮罩，底部菜单同样压不住（tabBar 在独立渲染层）
+    // 生成中是整屏遮罩，底部菜单压不住（tabBar 在独立渲染层）；进 result 内页也保持隐藏
     setTabBarHidden(true);
 
     try {
-      const { taskId } = await createTask(
+      const res = await generateImage(
         { filePath: photoPath, styleId, strength },
         (percent) => {
           if (this.alive) this.setData({ progress: percent });
@@ -293,17 +297,18 @@ Page({
       });
       this.startFakeProgress();
 
-      const detail = await waitTask(taskId);
-      this.stopFakeProgress();
-
-      if (detail.status === 'FAILED' || !detail.resultUrl) {
-        throw new Error(detail.errorMessage || '生成失败，换一张照片再试试');
+      if (!this.alive) {
+        this.stopFakeProgress();
+        return;
       }
-      if (!this.alive) return;
 
+      // 云函数已顺手换好临时直链；极少数情况下没有直链时改用 fileID 现换
+      const resultUrl = res.resultUrl || (await resolveTempUrl(res.resultFileID));
       this.setData({
-        resultUrl: detail.resultUrl,
-        costText: detail.costMs ? formatCost(detail.costMs) : '',
+        // 同一张结果图不重设 resultUrl，避免 image 组件重新解码闪烁
+        ...(resultUrl !== this.data.resultUrl ? { resultUrl } : {}),
+        resultFileID: res.resultFileID,
+        costText: res.costMs ? formatCost(res.costMs) : '',
       });
       // 生成成功扣减一次（仅占位，真实扣减以后端为准）
       consumeQuota();
@@ -315,9 +320,9 @@ Page({
     } catch (err) {
       if (!this.alive) return;
       // 失败时停在第二步：用户换张图或换个风格就能重试，不用从头再来
+      this.stopFakeProgress();
       wx.showModal({ title: '生成失败', content: toFriendlyMessage(err), showCancel: false });
     } finally {
-      this.stopFakeProgress();
       if (this.alive) {
         this.setData({
           submitting: false,
@@ -327,7 +332,7 @@ Page({
           phaseHint: '',
         });
       }
-      setTabBarHidden(false);
+      // 出图后停在 result 内页，底部菜单保持隐藏；只有 onReset 回到 upload 才恢复
     }
   },
 
@@ -404,6 +409,11 @@ Page({
       indeterminate: false,
     });
     this.goStep('upload');
+  },
+
+  /** 结果页「体验完成，回到首页」：清空当前结果，回到上传步骤 */
+  onBackToHome(): void {
+    this.onReset();
   },
 
   /* ================= 付费墙（占位） ================= */

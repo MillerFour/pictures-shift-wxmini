@@ -8,54 +8,59 @@
       <view class="close" hover-class="none" catchtap="onClose">×</view>
     </view>
 
-    <text class="welcome">欢迎来到照片百变</text>
-    <text class="sub">登录后可保存创作记录与次数，需授权你的微信头像与昵称</text>
+    <!-- 打开时先用 openid 查云端注册状态：查库期间占位，避免已注册用户误以为还要填信息 -->
+    <view wx:if="{{checking}}" class="checking-tip" style="text-align:center;padding:48rpx 0;color:#888;font-size:28rpx;">登录中…</view>
 
-    <view class="rows">
-      <!-- 头像：chooseAvatar 独立接口，整行可点 -->
-      <!-- 视觉行用纯 view（与昵称行一致），chooseAvatar 授权交给透明覆盖按钮，避免原生 button 样式干扰对齐 -->
-      <view class="row avatar-row">
-        <text class="row-label">头像</text>
-        <view class="row-core">
-          <image wx:if="{{avatarUrl}}" class="row-avatar" src="{{avatarUrl}}" mode="aspectFill" />
-          <text wx:else class="row-placeholder">点击授权</text>
+    <block wx:else>
+      <text class="welcome">欢迎来到照片百变</text>
+      <text class="sub">登录后可保存创作记录与次数，需授权你的微信头像与昵称</text>
+
+      <view class="rows">
+        <!-- 头像：chooseAvatar 独立接口，整行可点 -->
+        <!-- 视觉行用纯 view（与昵称行一致），chooseAvatar 授权交给透明覆盖按钮，避免原生 button 样式干扰对齐 -->
+        <view class="row avatar-row">
+          <text class="row-label">头像</text>
+          <view class="row-core">
+            <image wx:if="{{avatarUrl}}" class="row-avatar" src="{{avatarUrl}}" mode="aspectFill" />
+            <text wx:else class="row-placeholder">点击授权</text>
+          </view>
+          <text class="row-arrow">›</text>
+          <button class="row-trigger" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" hover-class="none" />
         </view>
-        <text class="row-arrow">›</text>
-        <button class="row-trigger" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar" hover-class="none" />
+
+        <!-- 昵称：nickname input 独立接口 -->
+        <view class="row nickname-row">
+          <text class="row-label">昵称</text>
+          <input
+            class="nick-input"
+            type="nickname"
+            value="{{nickname}}"
+            placeholder="点击填写"
+            placeholder-class="ph"
+            bindinput="onNicknameInput"
+            bindblur="onNicknameInput"
+          />
+          <text class="row-arrow">›</text>
+        </view>
       </view>
 
-      <!-- 昵称：nickname input 独立接口 -->
-      <view class="row nickname-row">
-        <text class="row-label">昵称</text>
-        <input
-          class="nick-input"
-          type="nickname"
-          value="{{nickname}}"
-          placeholder="点击填写"
-          placeholder-class="ph"
-          bindinput="onNicknameInput"
-          bindblur="onNicknameInput"
-        />
-        <text class="row-arrow">›</text>
+      <view class="agreement" bindtap="onToggleAgree">
+        <view class="checkbox {{agreed ? 'checked' : ''}}">
+          <text wx:if="{{agreed}}">✓</text>
+        </view>
+        <view class="agree-text-wrap">
+          <text class="agree-text">我已阅读并同意</text>
+          <text class="link" catchtap="onOpenPrivacy">《用户隐私保护指引》</text>
+          <text class="agree-text">与</text>
+          <text class="link" catchtap="onOpenTerms">《用户免责协议》</text>
+        </view>
       </view>
-    </view>
 
-    <view class="agreement" bindtap="onToggleAgree">
-      <view class="checkbox {{agreed ? 'checked' : ''}}">
-        <text wx:if="{{agreed}}">✓</text>
+      <view class="action-bar">
+        <view class="btn-primary {{avatarUrl && nickname && agreed ? '' : 'is-disabled'}}" hover-class="tap" catchtap="onConfirm">
+          {{loading ? '授权中…' : '授权登录'}}
+        </view>
       </view>
-      <view class="agree-text-wrap">
-        <text class="agree-text">我已阅读并同意</text>
-        <text class="link" catchtap="onOpenPrivacy">《用户隐私保护指引》</text>
-        <text class="agree-text">与</text>
-        <text class="link" catchtap="onOpenTerms">《用户免责协议》</text>
-      </view>
-    </view>
-
-    <view class="action-bar">
-      <view class="btn-primary {{avatarUrl && nickname && agreed ? '' : 'is-disabled'}}" hover-class="tap" catchtap="onConfirm">
-        {{loading ? '授权中…' : '授权登录'}}
-      </view>
-    </view>
+    </block>
   </view>
 </view>

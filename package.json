@@ -4,10 +4,7 @@
   "private": true,
   "description": "照片百变 —— 上传照片，一键生成吉卜力 / 日系动漫 / 3D 皮克斯 / 复古胶片风格",
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "server:dev": "npm --prefix server run dev",
-    "server:start": "npm --prefix server run start",
-    "server:typecheck": "npm --prefix server run typecheck"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "miniprogram-api-typings": "^4.0.6",
@@ -15,8 +12,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "dependencies": {
-    "sharp": "^0.35.5"
   }
 }
