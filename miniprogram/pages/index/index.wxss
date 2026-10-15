@@ -209,6 +209,42 @@
   justify-content: space-between;
 }
 
+/* ---------- 模型选择 ---------- */
+
+/* 与画风 grid 一致的换行平铺；一行三个，名称 + 一句短描述 */
+.model-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.model-chip {
+  flex: 1 1 calc((100% - 32rpx) / 3);
+  min-width: 0;
+  border: 2rpx solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface);
+  padding: 20rpx 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.model-chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.model-name {
+  font-size: 26rpx;
+  font-weight: 500;
+}
+
+.model-desc {
+  font-size: 20rpx;
+  color: var(--text-3);
+}
+
 /* ---------- 第三步 ---------- */
 
 .frame {

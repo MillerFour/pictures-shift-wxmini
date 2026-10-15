@@ -36,6 +36,27 @@ export interface StyleMeta {
   swatch: string;
 }
 
+/** 历史创作记录（生图成功后由服务端落库） */
+export interface Creation {
+  id: string;
+  styleName: string;
+  modelName: string;
+  /** 0-100 生成时的画风强度 */
+  strength: number;
+  /** 端到端耗时（毫秒） */
+  costMs: number;
+  /** 结果图在云存储的 fileID，展示前需换取临时直链 */
+  resultFileID: string;
+  createdAt: number;
+}
+
+/** 生图模型元数据（「模型选择」下发，参数细节留在服务端） */
+export interface ModelMeta {
+  id: string;
+  name: string;
+  desc: string;
+}
+
 /** BFF 下发的运行期配置 */
 export interface RuntimeConfig {
   /** 单张原图体积上限（MB），超了 BFF 直接拒收 */

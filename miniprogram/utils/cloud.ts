@@ -9,6 +9,8 @@
  * res.result 用 unknown 断言过渡，避免依赖具体返回结构。
  */
 
+import { ApiError } from './error';
+
 interface CallFunctionEnvelope<T> {
   code: number;
   message: string;
@@ -37,7 +39,14 @@ export function callFunction<T = unknown>(
       .then((res) => {
         const envelope = res.result as unknown as CallFunctionEnvelope<T>;
         if (!envelope || envelope.code !== 0) {
-          reject(new Error(envelope?.message || '云函数返回异常'));
+          // 业务错误码随异常透出（如 40200 次数不足），页面据此分流处理
+          reject(
+            new ApiError(
+              0,
+              String(envelope?.code ?? 0),
+              envelope?.message || '云函数返回异常',
+            ),
+          );
           return;
         }
         resolve(envelope.data);
@@ -76,6 +85,26 @@ export function resolveTempUrl(fileID: string): Promise<string> {
   });
 }
 
+/**
+ * 批量换取临时直链（列表页一次几十条，逐条换直链开销太大）。
+ * 返回 fileID -> url 映射；换取失败的 fileID 不在映射里，由调用方决定降级展示。
+ */
+export function resolveTempUrls(fileIDs: string[]): Promise<Record<string, string>> {
+  const unique = Array.from(new Set(fileIDs.filter(Boolean)));
+  if (!unique.length) return Promise.resolve({});
+  return new Promise<Record<string, string>>((resolve) => {
+    wx.cloud
+      .getTempFileURL({ fileList: unique })
+      .then((res) => {
+        const map: Record<string, string> = {};
+        for (const item of res.fileList || []) {
+          if (item.fileID && item.tempFileURL) map[item.fileID] = item.tempFileURL;
+        }
+        resolve(map);
+      })
+      .catch(() => resolve({}));
+  });
+}
 /** 上传头像到云存储，返回 fileID。 */
 export function uploadAvatar(filePath: string): Promise<string> {
   const ext = (filePath.split('.').pop() || 'png').toLowerCase();

@@ -105,6 +105,27 @@
             />
           </view>
 
+          <!-- 生成模型：服务端按密钥配置下发可用列表；无可用模型时整块隐藏 -->
+          <view class="block" wx:if="{{models.length > 0}}">
+            <view class="row block-head">
+              <text class="t-h2">生成模型</text>
+              <text class="t-cap">{{modelName}}</text>
+            </view>
+            <view class="model-row">
+              <view
+                wx:for="{{models}}"
+                wx:key="id"
+                class="model-chip {{modelId === item.id ? 'is-on' : ''}}"
+                hover-class="none"
+                bindtap="onSelectModel"
+                data-id="{{item.id}}"
+              >
+                <text class="model-name">{{item.name}}</text>
+                <text class="model-desc">{{item.desc}}</text>
+              </view>
+            </view>
+          </view>
+
           <view class="block">
             <view class="row block-head">
               <text class="t-h2">画风强度</text>
@@ -196,8 +217,8 @@
     </view>
   </view>
 
-  <!-- ============ 付费墙（占位弹层） ============ -->
-  <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
+  <!-- ============ 付费墙 ============ -->
+  <pay-modal show="{{showPay}}" packages="{{packages}}" paying="{{paying}}" pay-enabled="{{payEnabled}}" bind:close="onClosePay" bind:buy="onBuyPay" />
 
   <!-- ============ 授权登录（上传拦截 / 手动登录共用） ============ -->
   <login-modal show="{{showLogin}}" bind:login="onLoginSuccess" bind:close="onCloseLogin" />

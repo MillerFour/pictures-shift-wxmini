@@ -4,10 +4,19 @@ import { CONFIG_FALLBACK, STYLE_FALLBACK } from '../constants/styles';
 import { readCache, writeCache } from '../utils/cache';
 import { ApiError, TRANSPORT_CODES } from '../utils/error';
 import { callFunction, uploadSource } from '../utils/cloud';
-import { CreateTaskResponse, RuntimeConfig, StyleMeta, TaskDetail, TaskStatus } from '../types';
+import { 
+  Creation,
+  CreateTaskResponse,
+  ModelMeta,
+  RuntimeConfig,
+  StyleMeta,
+  TaskDetail,
+  TaskStatus,
+} from '../types';
 
 const TTL = {
   styles: 6 * 60 * 60 * 1000,
+  models: 6 * 60 * 60 * 1000,
   config: 24 * 60 * 60 * 1000,
 };
 
@@ -26,6 +35,31 @@ export async function loadStyles(): Promise<StyleMeta[]> {
     return styles;
   } catch {
     return STYLE_FALLBACK;
+  }
+}
+
+/**
+ * 历史创作：分页拉取当前用户的生成记录。
+ * 结果图 fileID 需先用 resolveTempUrls 换临时直链才能渲染。
+ */
+export function fetchCreations(limit = 20, skip = 0): Promise<Creation[]> {
+  return callFunction<Creation[]>('listCreations', { limit, skip });
+}
+
+/**
+ * 可用生图模型列表（模型选择数据源）。
+ * 服务端按密钥配置过滤，空列表 = 无可选模型，页面隐藏选择器。
+ */
+export async function loadModels(): Promise<ModelMeta[]> {
+  const cached = readCache<ModelMeta[]>(STORAGE_KEYS.models, TTL.models);
+  if (cached) return cached;
+  try {
+    const remote = await callFunction<ModelMeta[]>('models', {}, GENERATE_FUNCTION);
+    const models = Array.isArray(remote) ? remote : [];
+    if (models.length) writeCache(STORAGE_KEYS.models, models);
+    return models;
+  } catch {
+    return [];
   }
 }
 
@@ -110,6 +144,8 @@ export interface GenerateParams {
   styleId: string;
   /** 0-100 */
   strength: number;
+  /** 模型选择：模型目录 id，缺省走服务端默认引擎 */
+  modelId?: string;
 }
 
 export interface GenerateResponse {
@@ -129,7 +165,7 @@ export function generateImage(
   return uploadSource(params.filePath, onProgress).then((fileID) =>
     callFunction<GenerateResponse>(
       'generate',
-      { fileID, styleId: params.styleId, strength: params.strength },
+      { fileID, styleId: params.styleId, strength: params.strength, modelId: params.modelId },
       GENERATE_FUNCTION,
       GEN_TIMEOUT,
     ),

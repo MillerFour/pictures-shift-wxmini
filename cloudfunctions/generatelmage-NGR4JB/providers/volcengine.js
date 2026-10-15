@@ -1,19 +1,28 @@
 'use strict';
 const { guidanceOf } = require('../catalog');
-const { ProviderError, downloadImage, readVendorError, toDataUri } = require('./types');
+const { ProviderError, downloadImage, readVendorError, toDataUri, httpJson } = require('./types');
 
+/**
+ * Seedream（方舟 images/generations）请求体。
+ * 固定单图生成（sequential_image_generation=disabled）、同步返回（stream=false）；
+ * 结果优先 b64_json 省一次下载，厂商只回 url 时由 submit 兜底下载。
+ * guidance_scale 仅 4.0 系列支持（目录里 guidance: true 才带），5.0 由 prompt 表达强度。
+ */
 function buildRequest(input, cfg) {
-  return {
+  const body = {
     model: cfg.model,
     prompt: input.style.prompt,
     negative_prompt: input.style.negativePrompt,
     image: toDataUri(input.source),
+    sequential_image_generation: 'disabled',
     response_format: 'b64_json',
     size: cfg.size,
+    stream: false,
     watermark: false,
-    guidance_scale: guidanceOf(input.style, input.strength),
     seed: Math.floor(Math.random() * 2 ** 31),
   };
+  if (cfg.guidance) body.guidance_scale = guidanceOf(input.style, input.strength);
+  return body;
 }
 
 function createVolcengineProvider(cfg) {
@@ -25,18 +34,20 @@ function createVolcengineProvider(cfg) {
   async function call(url, init) {
     let res;
     try {
-      res = await fetch(url, init);
+      res = await httpJson(url, { method: init.method || 'POST', headers: init.headers, body: init.body });
     } catch (e) {
       throw new ProviderError('volcengine', `请求方舟失败：${e.message}`);
     }
-    const text = await res.text();
+    const { status: resStatus, text } = res;
     let payload;
     try {
       payload = text ? JSON.parse(text) : {};
     } catch {
-      throw new ProviderError('volcengine', `方舟返回非 JSON（HTTP ${res.status}）：${text.slice(0, 200)}`);
+      throw new ProviderError('volcengine', `方舟返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
     }
-    if (!res.ok) throw new ProviderError('volcengine', readVendorError(payload) || `方舟返回 HTTP ${res.status}`);
+    if (resStatus < 200 || resStatus >= 300) {
+      throw new ProviderError('volcengine', readVendorError(payload) || `方舟返回 HTTP ${resStatus}`);
+    }
     return payload;
   }
 

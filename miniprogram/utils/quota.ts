@@ -1,22 +1,25 @@
 import { STORAGE_KEYS } from '../constants/keys';
+import { fetchQuota } from '../services/pay';
 
 /**
- * 剩余次数（配额）本地占位实现。
+ * 剩余次数（配额）。
  *
- * 真实配额由后端「我的」接口返回，这里先用本地 storage 模拟，
- * 以便前端在后端 / 支付接口就绪前就能把付费墙流程跑通。
- * —— 文件上传与配额 / 支付 API 对接均暂作预留。
+ * 真源在云端 users.quota：下单扣减、购买发货都发生在服务端，
+ * 本地 storage 只是缓存展示值，用来做「是否弹付费墙」的快速判断。
+ *
+ * 约定：quota >= 0 为已知值；QUOTA_UNKNOWN(-1) 表示尚未从云端拉过。
+ * 判断「能否生成」最终以生图云函数的服务端扣减为准，本地值只做体验优化。
  */
 
-/** 新用户赠送的免费次数 */
-const DEFAULT_QUOTA = 1;
+/** 尚未从云端获取过配额 */
+export const QUOTA_UNKNOWN = -1;
 
 export function getQuota(): number {
   try {
     const v = wx.getStorageSync(STORAGE_KEYS.quota);
-    return typeof v === 'number' && v >= 0 ? v : DEFAULT_QUOTA;
+    return typeof v === 'number' && v >= 0 ? v : QUOTA_UNKNOWN;
   } catch {
-    return DEFAULT_QUOTA;
+    return QUOTA_UNKNOWN;
   }
 }
 
@@ -24,11 +27,23 @@ export function setQuota(n: number): void {
   try {
     wx.setStorageSync(STORAGE_KEYS.quota, Math.max(0, Math.floor(n)));
   } catch {
-    /* 忽略：仅本地占位 */
+    /* 忽略：仅本地缓存 */
   }
 }
 
-/** 生成成功后扣减一次（仅占位，真实扣减以后端为准） */
+/** 从云端拉取最新配额并写缓存；失败保持原值 */
+export async function refreshQuota(): Promise<number> {
+  try {
+    const quota = await fetchQuota();
+    setQuota(quota);
+    return quota;
+  } catch {
+    return getQuota();
+  }
+}
+
+/** 生成成功后本地乐观减一（真值随后由 refreshQuota 校准） */
 export function consumeQuota(): void {
-  setQuota(getQuota() - 1);
+  const current = getQuota();
+  if (current >= 0) setQuota(current - 1);
 }

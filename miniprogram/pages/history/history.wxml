@@ -1,0 +1,35 @@
+<view class="page">
+  <view class="page-body">
+
+    <view wx:if="{{items.length === 0 && !loading}}" class="empty card">
+      <text class="t-cap">还没有生成记录，去「创作」生成第一张吧。</text>
+    </view>
+
+    <view wx:for="{{items}}" wx:key="id" class="item card">
+      <image
+        class="thumb {{item.url ? '' : 'thumb-empty'}}"
+        src="{{item.url}}"
+        mode="aspectFill"
+        data-url="{{item.url}}"
+        bindtap="onPreview"
+      />
+      <view class="col grow meta">
+        <text class="meta-title">{{item.styleName}}</text>
+        <text class="t-cap">{{item.modelName}}</text>
+        <text class="t-cap">{{item.timeText}}{{item.costText ? ' · ' + item.costText : ''}}</text>
+      </view>
+      <view
+        class="btn-save {{item.saving || !item.url ? 'is-disabled' : ''}}"
+        hover-class="tap"
+        data-index="{{index}}"
+        bindtap="onSave"
+      >
+        {{item.saving ? '保存中…' : '保存'}}
+      </view>
+    </view>
+
+    <view wx:if="{{loading}}" class="foot-hint"><text class="t-cap">加载中…</text></view>
+    <view wx:elif="{{!hasMore && items.length > 0}}" class="foot-hint"><text class="t-cap">没有更多了</text></view>
+
+  </view>
+</view>

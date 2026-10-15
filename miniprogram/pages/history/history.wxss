@@ -1,0 +1,55 @@
+.empty {
+  margin-top: 24rpx;
+  padding: 48rpx 32rpx;
+  text-align: center;
+}
+
+/* 左图右信息一行卡：缩略图定宽，信息区自适应收窄 */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.thumb {
+  width: 168rpx;
+  height: 168rpx;
+  border-radius: var(--r-sm);
+  flex: none;
+  background: var(--surface-2);
+  border: 2rpx solid var(--line);
+}
+
+/* 直链换取失败时的占位：不显示裂图 */
+.thumb-empty {
+  opacity: 0;
+}
+
+.meta {
+  gap: 6rpx;
+}
+
+.meta-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+.btn-save {
+  flex: none;
+  padding: 16rpx 28rpx;
+  border: 2rpx solid var(--line-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  font-size: 25rpx;
+}
+
+.btn-save.is-disabled {
+  opacity: 0.4;
+}
+
+.foot-hint {
+  padding: 24rpx 0 48rpx;
+  text-align: center;
+}

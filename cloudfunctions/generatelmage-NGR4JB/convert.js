@@ -2,6 +2,7 @@
 const cloud = require('wx-server-sdk');
 const { config } = require('./config');
 const { findStyle } = require('./catalog');
+const { findModel } = require('./models');
 const { ProviderError } = require('./providers/types');
 const { createProvider } = require('./providers');
 
@@ -40,8 +41,10 @@ async function resolveSourceUrl(fileID) {
 /**
  * 同步出图：一次调用内完成「下载原图 → 调厂商 → 上传结果到云存储」，
  * 直接返回结果图的 fileID 与耗时，不再走异步任务表。
+ *
+ * modelId 为空或目录不可用时回退到 STYLE_PROVIDER 默认引擎（兼容旧调用）。
  */
-async function generate(sourceFileID, styleId, strength) {
+async function generate(sourceFileID, styleId, strength, modelId) {
   const startedAt = Date.now();
   const style = findStyle(styleId);
   if (!style) throw new Error(`风格 ${styleId} 不存在`);
@@ -50,7 +53,8 @@ async function generate(sourceFileID, styleId, strength) {
   const contentType = detectImageType(source.bytes);
   if (!contentType) throw new Error('只支持 JPG / PNG / WebP 图片');
 
-  const provider = createProvider();
+  const model = findModel(modelId);
+  const provider = model ? createProvider(model.provider, model) : createProvider();
   const sourceUrl = await resolveSourceUrl(sourceFileID);
   const input = { style, strength: Number(strength) || 60, source, publicSourceUrl: sourceUrl };
 

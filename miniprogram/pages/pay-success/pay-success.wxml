@@ -1,0 +1,46 @@
+<view class="page">
+  <view class="page-body result">
+
+    <!-- 确认中 -->
+    <block wx:if="{{state === 'checking'}}">
+      <view class="badge pending"><view class="spinner"></view></view>
+      <text class="t-h2 title">正在确认支付结果</text>
+      <text class="t-cap desc">到账确认通常几秒内完成，请稍候…</text>
+    </block>
+
+    <!-- 支付成功 -->
+    <block wx:elif="{{state === 'success'}}">
+      <view class="badge ok"><view class="check"></view></view>
+      <text class="t-h2 title">支付成功</text>
+      <text class="t-cap desc">创作次数 +{{count}} 已到账</text>
+
+      <view class="quota card">
+        <text class="t-cap">当前剩余次数</text>
+        <text class="quota-num">{{quota}}</text>
+      </view>
+      <text class="t-cap order-no">订单号 {{orderId}}</text>
+    </block>
+
+    <!-- 已退款 -->
+    <block wx:elif="{{state === 'refunded'}}">
+      <view class="badge warn"><text class="badge-glyph">!</text></view>
+      <text class="t-h2 title">订单已退款</text>
+      <text class="t-cap desc">退款已原路退回，如有疑问请联系客服</text>
+    </block>
+
+    <!-- 确认超时 -->
+    <block wx:else>
+      <view class="badge warn"><text class="badge-glyph">?</text></view>
+      <text class="t-h2 title">支付结果确认中</text>
+      <text class="t-cap desc">次数到账稍有延迟，一般几分钟内自动到账；若长时间未到账请联系客服</text>
+    </block>
+
+  </view>
+
+  <view class="action-bar">
+    <view class="btn-primary" hover-class="tap" bindtap="onBack">完 成</view>
+    <view wx:if="{{state === 'unknown'}}" class="btn-ghost" hover-class="btn-ghost-hover" style="margin-top: 16rpx;" bindtap="onRetry">
+      重新查询
+    </view>
+  </view>
+</view>

@@ -2,6 +2,8 @@
 export const STORAGE_KEYS = {
   /** 风格列表缓存 */
   styles: 'ps:cache:styles',
+  /** 生图模型列表缓存（模型选择） */
+  models: 'ps:cache:models',
   /** 运行期配置缓存 */
   runtimeConfig: 'ps:cache:runtime-config',
   /** 剩余次数（本地占位，真实值来自后端） */

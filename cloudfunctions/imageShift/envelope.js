@@ -15,6 +15,12 @@ const ErrorCode = {
   PROVIDER_NOT_CONFIGURED: 50011,
   INTERNAL: 50000,
   UNAUTHORIZED: 40100,
+  /** 创作次数已用完（前端据此弹付费墙） */
+  QUOTA_EXHAUSTED: 40200,
+  /** 支付链路失败（下单签名 / 查单 / 发货） */
+  PAY_ERROR: 40300,
+  /** 虚拟支付未在服务端配置（缺 OfferID / AppKey 等环境变量） */
+  PAY_NOT_CONFIGURED: 40301,
 };
 
 function ok(data, requestId) {

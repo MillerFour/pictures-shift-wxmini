@@ -2,6 +2,8 @@
   "pages": [
     "pages/index/index",
     "pages/profile/profile",
+    "pages/pay-success/pay-success",
+    "pages/history/history",
     "pages/disclaimer/disclaimer",
     "pages/faq/faq"
   ],

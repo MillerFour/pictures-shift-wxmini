@@ -11,7 +11,7 @@
       <view class="col grow">
         <text class="lc-title">登录解锁创作</text>
         <view class="lc-points">
-          <text class="t-cap">· 领取 10 次免费创作次数</text>
+          <text class="t-cap">· 领取免费创作次数，立即体验</text>
           <text class="t-cap">· 查看剩余次数与历史作品</text>
         </view>
       </view>
@@ -37,20 +37,13 @@
       <view class="btn-primary buy" hover-class="tap" bindtap="onBuyPack">购买次数包</view>
     </view>
 
-    <!-- 我的记录：仅登录后展示 -->
-    <view wx:if="{{loggedIn}}" class="block">
-      <view class="row block-head">
-        <text class="t-h2">我的记录</text>
-      </view>
-      <view wx:if="{{records.length === 0}}" class="empty card">
-        <text class="t-cap">还没有生成记录，去「创作」生成第一张吧。</text>
-      </view>
-    </view>
-
     <!-- 常用 -->
     <view class="block">
       <view class="row block-head"><text class="t-h2">常用</text></view>
       <view class="menu card">
+        <view class="menu-item" hover-class="tap" bindtap="onGoHistory">
+          <text class="menu-name">历史创作</text><text class="menu-arrow">›</text>
+        </view>
         <view class="menu-item" hover-class="tap" bindtap="onGoFaq">
           <text class="menu-name">常见问题</text><text class="menu-arrow">›</text>
         </view>
@@ -65,7 +58,7 @@
 
   </view>
 
-  <pay-modal show="{{showPay}}" bind:close="onClosePay" bind:buy="onBuyPay" />
+  <pay-modal show="{{showPay}}" packages="{{packages}}" paying="{{paying}}" pay-enabled="{{payEnabled}}" bind:close="onClosePay" bind:buy="onBuyPay" />
 
   <login-modal show="{{showLogin}}" bind:login="onLoginSuccess" bind:close="onCloseLogin" />
 </view>

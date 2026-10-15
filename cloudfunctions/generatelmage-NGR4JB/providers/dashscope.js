@@ -1,5 +1,5 @@
 'use strict';
-const { ProviderError, downloadImage, readVendorError } = require('./types');
+const { ProviderError, downloadImage, readVendorError, httpJson } = require('./types');
 
 const TERMINAL_FAILED = new Set(['FAILED', 'CANCELED', 'UNKNOWN']);
 const TERMINAL_OK = new Set(['SUCCEEDED', 'SUCCESS']);
@@ -15,18 +15,18 @@ function createDashScopeProvider(cfg) {
   async function call(url, init) {
     let res;
     try {
-      res = await fetch(url, init);
+      res = await httpJson(url, init);
     } catch (e) {
       throw new ProviderError('dashscope', `请求百炼失败：${e.message}`);
     }
-    const text = await res.text();
+    const { status: resStatus, text } = res;
     let payload;
     try {
       payload = text ? JSON.parse(text) : {};
     } catch {
-      throw new ProviderError('dashscope', `百炼返回非 JSON（HTTP ${res.status}）：${text.slice(0, 200)}`);
+      throw new ProviderError('dashscope', `百炼返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
     }
-    if (!res.ok) throw new ProviderError('dashscope', readVendorError(payload) || `百炼返回 HTTP ${res.status}`);
+    if (resStatus < 200 || resStatus >= 300) throw new ProviderError('dashscope', readVendorError(payload) || `百炼返回 HTTP ${resStatus}`);
     return payload;
   }
 

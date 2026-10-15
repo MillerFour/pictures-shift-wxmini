@@ -1,5 +1,5 @@
 'use strict';
-const { ProviderError, downloadImage, readVendorError, toDataUri } = require('./types');
+const { ProviderError, downloadImage, readVendorError, toDataUri, httpJson } = require('./types');
 
 function createTokenHubProvider(cfg) {
   const headers = {
@@ -10,7 +10,7 @@ function createTokenHubProvider(cfg) {
   async function call(body) {
     let res;
     try {
-      res = await fetch(`${cfg.baseUrl}/wand/hunyuan-image/v35-generation`, {
+      res = await httpJson(`${cfg.baseUrl}/wand/hunyuan-image/v35-generation`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
@@ -18,14 +18,14 @@ function createTokenHubProvider(cfg) {
     } catch (e) {
       throw new ProviderError('tokenhub', `请求 TokenHub 失败：${e.message}`);
     }
-    const text = await res.text();
+    const { status: resStatus, text } = res;
     let payload;
     try {
       payload = text ? JSON.parse(text) : {};
     } catch {
-      throw new ProviderError('tokenhub', `TokenHub 返回非 JSON（HTTP ${res.status}）：${text.slice(0, 200)}`);
+      throw new ProviderError('tokenhub', `TokenHub 返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
     }
-    if (!res.ok) throw new ProviderError('tokenhub', readVendorError(payload) || `TokenHub 返回 HTTP ${res.status}`);
+    if (resStatus < 200 || resStatus >= 300) throw new ProviderError('tokenhub', readVendorError(payload) || `TokenHub 返回 HTTP ${resStatus}`);
     return payload;
   }
 

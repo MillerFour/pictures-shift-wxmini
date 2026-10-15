@@ -1,14 +1,18 @@
-import { generateImage, loadRuntimeConfig, loadStyles } from '../../services/api';
+import { generateImage, loadModels, loadRuntimeConfig, loadStyles } from '../../services/api';
+import { buyPackage, fetchPackages, PayError, PayPackage } from '../../services/pay';
 import { resolveTempUrl } from '../../utils/cloud';
 import { STYLE_FALLBACK } from '../../constants/styles';
 import { EXAMPLE, exampleAfterOf } from '../../constants/examples';
 
 import { chooseImage, saveToAlbum } from '../../utils/image';
-import { toFriendlyMessage } from '../../utils/error';
-import { getQuota, setQuota, consumeQuota } from '../../utils/quota';
+import { ApiError, toFriendlyMessage } from '../../utils/error';
+import { getQuota, consumeQuota, refreshQuota } from '../../utils/quota';
 import { setTabBarHidden, syncTabBarFromPage, TAB_BAR_RPX_HEIGHT } from '../../utils/tabbar';
 import { isLoggedIn, type WxUser } from '../../utils/auth';
-import { StyleMeta } from '../../types';
+import { ModelMeta, StyleMeta } from '../../types';
+
+/** 生图云函数的次数不足错误码（服务端真源扣减被拒） */
+const CODE_QUOTA_EXHAUSTED = '40200';
 
 /**
  * 单页三步向导：上传 → 选风格 → 出图。
@@ -44,6 +48,11 @@ Page({
     /** 主按钮文案跟着选择走：「生成吉卜力风格」比「生成这张风格」明确得多 */
     submitLabel: `生成${FALLBACK_STYLE.name}风格`,
 
+    /** 可用生图模型（服务端按密钥配置过滤；空 = 隐藏模型选择） */
+    models: [] as ModelMeta[],
+    modelId: '',
+    modelName: '',
+
     photoPath: '',
     photoMeta: '',
     /** 0-100 */
@@ -67,8 +76,15 @@ Page({
     showOriginal: false,
     saving: false,
 
-    /** 付费墙（占位弹层） */
+    /** 付费墙 */
     showPay: false,
+    /** 次数包（云端下发，与 MP 后台虚拟支付道具一致） */
+    packages: [] as PayPackage[],
+    packagesLoading: false,
+    /** false=演示模式（NEED_PAY=false，服务端模拟发货） */
+    payEnabled: true,
+    /** 支付编排进行中 */
+    paying: false,
 
     /** 授权登录弹层：未登录点击上传时弹出 */
     showLogin: false,
@@ -94,6 +110,8 @@ Page({
   onShow() {
     // 底部菜单高亮由本页自己同步：此刻 route 必然正确，不受框架复用实例的时序影响
     syncTabBarFromPage(this);
+    // 登录后静默校准配额（支付成功页返回时也走这里刷新次数）
+    if (isLoggedIn()) void refreshQuota();
   },
 
   /**
@@ -166,9 +184,9 @@ Page({
     });
   },
 
-  /** 拉风格与运行期配置；失败退回内置数据，不打断用户 */
+  /** 拉风格、模型与运行期配置；失败退回内置数据或隐藏对应选择器，不打断用户 */
   async hydrate(): Promise<void> {
-    const [styles, config] = await Promise.allSettled([loadStyles(), loadRuntimeConfig()]);
+    const [styles, config, models] = await Promise.allSettled([loadStyles(), loadRuntimeConfig(), loadModels()]);
     if (!this.alive) return;
 
     if (styles.status === 'fulfilled' && styles.value.length > 0) {
@@ -178,6 +196,12 @@ Page({
       this.syncSelection(list.find((s) => s.id === this.data.styleId)?.id ?? list[0].id);
     } else {
       this.setData({ styles: STYLE_FALLBACK });
+    }
+
+    // 模型列表：默认选中第一个（服务端目录顺序即推荐顺序），空列表隐藏选择器
+    if (models.status === 'fulfilled' && models.value.length > 0) {
+      const list = models.value;
+      this.setData({ models: list, modelId: list[0].id, modelName: list[0].name });
     }
 
     if (config.status === 'fulfilled') {
@@ -243,6 +267,15 @@ Page({
     this.syncSelection(id);
   },
 
+  /** 选择生成模型：仅更新展示状态，生图请求时随参数下发 */
+  onSelectModel(e: { currentTarget: { dataset: { id?: string } } }): void {
+    const id = e.currentTarget.dataset.id;
+    if (!id || id === this.data.modelId) return;
+    const picked = this.data.models.find((m) => m.id === id);
+    if (!picked) return;
+    this.setData({ modelId: id, modelName: picked.name });
+  },
+
   onStrengthChanging(e: { detail: { value: number } }): void {
     this.setData({ strength: e.detail.value });
   },
@@ -258,17 +291,21 @@ Page({
   },
 
   async submit(): Promise<void> {
-    const { photoPath, strength, styleId } = this.data;
+    const { photoPath, strength, styleId, modelId } = this.data;
     if (!photoPath) {
       wx.showToast({ title: '先上传一张照片吧', icon: 'none' });
       return;
     }
     if (this.data.submitting) return;
 
-    // 付费墙（占位拦截）：真实配额来自后端，这里读本地占位值。
-    if (getQuota() <= 0) {
-      this.setData({ showPay: true });
-      return;
+    // 付费墙：本地缓存为 0 时先在线确认一次，仍是 0 才拦截。
+    // 值未知（未拉到过）不拦截，交给生图云函数的服务端扣减兜底。
+    if (getQuota() === 0) {
+      const remote = await refreshQuota();
+      if (remote === 0) {
+        void this.openPaywall();
+        return;
+      }
     }
 
     this.setData({
@@ -283,7 +320,7 @@ Page({
 
     try {
       const res = await generateImage(
-        { filePath: photoPath, styleId, strength },
+        { filePath: photoPath, styleId, strength, modelId: modelId || undefined },
         (percent) => {
           if (this.alive) this.setData({ progress: percent });
         },
@@ -310,7 +347,7 @@ Page({
         resultFileID: res.resultFileID,
         costText: res.costMs ? formatCost(res.costMs) : '',
       });
-      // 生成成功扣减一次（仅占位，真实扣减以后端为准）
+      // 生成成功本地乐观减一，真值由 onShow 的 refreshQuota 校准
       consumeQuota();
       this.goStep('result');
       // 等一拍再淡入：直接置 true 会让图片在解码前就开始过渡，看到的是白底
@@ -321,6 +358,12 @@ Page({
       if (!this.alive) return;
       // 失败时停在第二步：用户换张图或换个风格就能重试，不用从头再来
       this.stopFakeProgress();
+      // 服务端判定次数不足：拉最新配额并弹付费墙
+      if (err instanceof ApiError && err.code === CODE_QUOTA_EXHAUSTED) {
+        await refreshQuota();
+        void this.openPaywall();
+        return;
+      }
       wx.showModal({ title: '生成失败', content: toFriendlyMessage(err), showCancel: false });
     } finally {
       if (this.alive) {
@@ -416,17 +459,47 @@ Page({
     this.onReset();
   },
 
-  /* ================= 付费墙（占位） ================= */
+  /* ================= 付费墙与虚拟支付 ================= */
+
+  /** 打开付费墙：拉取云端套餐（价格与档位以后台虚拟支付道具为准） */
+  async openPaywall(): Promise<void> {
+    if (this.data.packagesLoading) return;
+    this.setData({ showPay: true, packagesLoading: true });
+    try {
+      const { payEnabled, packages } = await fetchPackages();
+      if (this.alive) this.setData({ packages, payEnabled });
+    } catch (err) {
+      if (this.alive) {
+        this.setData({ showPay: false });
+        wx.showToast({ title: toFriendlyMessage(err, '套餐加载失败'), icon: 'none' });
+      }
+    } finally {
+      if (this.alive) this.setData({ packagesLoading: false });
+    }
+  },
 
   onClosePay(): void {
     this.setData({ showPay: false });
   },
 
-  onBuyPay(e: { detail: { count: number } }): void {
-    // TODO: 微信支付 API 对接暂作预留；此处模拟购买并本地授予次数。
-    const count = e.detail?.count ?? 0;
-    setQuota(getQuota() + count);
-    this.setData({ showPay: false });
-    wx.showToast({ title: '购买成功（模拟）', icon: 'success' });
+  /** 选中次数包 → 下单 → 拉起微信虚拟支付 → 服务端确认发货 → 成功页 */
+  onBuyPay(e: { detail: { id?: string } }): void {
+    const id = e.detail?.id;
+    if (!id || this.data.paying) return;
+    void this.buy(id);
+  },
+
+  async buy(packageId: string): Promise<void> {
+    this.setData({ paying: true });
+    try {
+      const result = await buyPackage(packageId);
+      this.setData({ showPay: false, paying: false, packages: [] });
+      // 结果页返回时 onShow 的 refreshQuota 会校准本地次数
+      wx.navigateTo({ url: `/pages/pay-success/pay-success?orderId=${result.outTradeNo}` });
+    } catch (err) {
+      this.setData({ paying: false });
+      if (err instanceof PayError && err.reason === 'CANCELLED') return; // 用户取消，不打扰
+      wx.showModal({ title: '支付未完成', content: toFriendlyMessage(err), showCancel: false });
+    }
   },
 });

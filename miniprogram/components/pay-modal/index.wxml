@@ -17,15 +17,18 @@
       >
         <view wx:if="{{item.tag}}" class="tag">{{item.tag}}</view>
         <text class="pkg-name">{{item.name}}</text>
-        <text class="pkg-desc">{{item.desc}}</text>
-        <text class="pkg-price">{{item.price}}</text>
+        <text class="pkg-desc">{{item.unitText}}</text>
+        <text class="pkg-price">{{item.priceText}}</text>
         <text class="pkg-count">{{item.count}} 次</text>
       </view>
     </view>
 
     <view class="action-bar">
-      <view class="btn-primary" hover-class="tap" catchtap="onBuy">微信支付</view>
+      <view class="btn-primary {{paying || packages.length === 0 ? 'is-disabled' : ''}}" hover-class="tap" catchtap="onBuy">
+        {{paying ? '支付中…' : payEnabled ? '微信支付' : '立即到账（演示）'}}
+      </view>
     </view>
-    <text class="t-cap tip">支付能力与套餐定价为占位，最终以实际上线为准</text>
+    <text class="t-cap tip" wx:if="{{payEnabled}}">生成次数购买后即时到账，点击支付即代表同意《用户协议》</text>
+    <text class="t-cap tip" wx:else>当前为免支付演示模式，点击后次数直接到账，不产生真实扣款</text>
   </view>
 </view>

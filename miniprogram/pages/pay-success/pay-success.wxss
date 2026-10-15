@@ -1,0 +1,87 @@
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100rpx;
+}
+
+/* 状态圆标：成功用强调色实心 + 白色对勾，其余状态用线框（一次只有一个强调色） */
+.badge {
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge.ok {
+  background: var(--accent);
+}
+
+.badge.pending,
+.badge.warn {
+  border: 4rpx solid var(--line-strong);
+  background: var(--surface);
+}
+
+.badge-glyph {
+  font-size: 64rpx;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+/* CSS 画的白色对勾，不引图标字体 */
+.check {
+  width: 52rpx;
+  height: 26rpx;
+  border-left: 10rpx solid #fff;
+  border-bottom: 10rpx solid #fff;
+  transform: rotate(-45deg) translate(6rpx, -8rpx);
+}
+
+.spinner {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  border: 6rpx solid var(--surface-2);
+  border-top-color: var(--text-3);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.title {
+  margin-top: 40rpx;
+}
+
+.desc {
+  margin-top: 12rpx;
+  text-align: center;
+  max-width: 560rpx;
+}
+
+.quota {
+  margin-top: 64rpx;
+  width: 100%;
+  padding: 32rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  align-items: center;
+}
+
+.quota-num {
+  font-size: 64rpx;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.order-no {
+  margin-top: 24rpx;
+  font-size: 20rpx;
+}
