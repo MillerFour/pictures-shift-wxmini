@@ -1,5 +1,5 @@
 import { STORAGE_KEYS } from '../constants/keys';
-import { fetchQuota } from '../services/pay';
+import { fetchFreeQuota } from '../services/pay';
 
 /**
  * 剩余次数（配额）。
@@ -31,10 +31,10 @@ export function setQuota(n: number): void {
   }
 }
 
-/** 从云端拉取最新配额并写缓存；失败保持原值 */
+/** 从云端拉取最新免费次数余额并写缓存；失败保持原值 */
 export async function refreshQuota(): Promise<number> {
   try {
-    const quota = await fetchQuota();
+    const quota = await fetchFreeQuota();
     setQuota(quota);
     return quota;
   } catch {

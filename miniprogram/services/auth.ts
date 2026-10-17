@@ -1,4 +1,4 @@
-import { callFunction } from '../utils/cloud';
+import { CLOUD_FUNCTIONS, callFunction, uploadCloudFile } from '../utils/cloud';
 import { type WxUser } from '../utils/auth';
 
 export interface LoginResult {
@@ -28,7 +28,7 @@ export interface CheckResult {
  * 未注册返回 exists=false，由调用方引导用户授权头像昵称建档。
  */
 export async function checkUser(): Promise<CheckResult> {
-  return callFunction<CheckResult>('getUserInfo');
+  return callFunction<CheckResult>('getUserInfo', {}, CLOUD_FUNCTIONS.identity);
 }
 
 /**
@@ -36,6 +36,24 @@ export async function checkUser(): Promise<CheckResult> {
  *
  * 仅用于首次注册——云端用 openid 把昵称/头像 upsert 进 users 集合（openid 即 _id，天然唯一）。
  */
+/**
+ * 登录成功后预创建任务目录：上传 task/{openid}/.keep 占位文件，
+ * 让云存储在用户登录后立即出现其任务文件夹（正式原/成图按任务时间戳随后落入）。
+ * 失败静默：占位只影响控制台可见性，首次生成时目录仍会自动产生。
+ */
+async function ensureTaskFolder(openid: string): Promise<void> {
+  try {
+    const local = `${wx.env.USER_DATA_PATH}/task-folder-keep`;
+    wx.getFileSystemManager().writeFileSync(local, '', 'utf8');
+    await uploadCloudFile(`task/${openid}/.keep`, local);
+  } catch {
+    /* 静默：见函数注释 */
+  }
+}
+
 export async function login(profile: LoginProfile): Promise<LoginResult> {
-  return callFunction<LoginResult>('login', profile);
+  const result = await callFunction<LoginResult>('login', profile, CLOUD_FUNCTIONS.identity);
+  // 及时生成用户任务目录（后台执行，不阻塞登录返回）
+  void ensureTaskFolder(result.openid);
+  return result;
 }

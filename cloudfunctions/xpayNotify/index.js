@@ -3,7 +3,7 @@
 /**
  * 虚拟支付发货推送回调（xpay_* 事件）。
  *
- * 部署方式：与 imageShift 一起上传到云函数后，在「云开发控制台 → 云函数 →
+ * 部署方式：上传到云函数后，在「云开发控制台 → 云函数 →
  * HTTP 访问服务（云接入）」为它开通一个路径（默认 /xpay-notify），
  * 再把 MP 后台「虚拟支付 → 基本配置 → 发货推送 URL」配成
  *   https://<接入域名>/xpay-notify
@@ -15,10 +15,10 @@
  * - xpay_refund_notify：幂等退款（订单 → REFUNDED，已发货的回收次数）
  * - 成功必须返回 <xml><ErrCode>0</ErrCode>...，否则平台最多重试 15 次
  *
- * 说明：本函数是「发货推送」路径；即使未配置推送，imageShift 的前端查单确认
+ * 说明：本函数是「发货推送」路径；即使未配置推送，pay 云函数的前端查单确认
  * 与每分钟定时兜底也能保证发货，二者以订单状态机天然幂等。
  *
- * 注意：发货逻辑与 imageShift/pay.js 的 confirmDelivery/applyRefund 等价，
+ * 注意：发货逻辑与 pay/pay.js 的 confirmDelivery/applyRefund 等价，
  * 云函数目录相互独立无法共享代码，改动状态机时两边保持同步。
  */
 
@@ -50,7 +50,7 @@ function xmlResponse(errCode, errMsg) {
   };
 }
 
-/** 幂等发货：与 imageShift/pay.js confirmDelivery 状态机一致 */
+/** 幂等发货：与 pay/pay.js confirmDelivery 状态机一致 */
 async function confirmDelivery(order, wxOrderId) {
   return db.runTransaction(async (transaction) => {
     const raw = await transaction.collection(ORDERS).doc(order._id).get();

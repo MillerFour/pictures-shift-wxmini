@@ -1,0 +1,12 @@
+{
+  "name": "pay",
+  "version": "1.0.0",
+  "description": "交易域：套餐 / 下单 / 查单发货 / 订单列表 + 定时兜底扫描（订单状态机 + XPAY 密钥）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "app-config",
+  "version": "1.0.0",
+  "description": "应用配置域：运行期配置 / 画风目录（只读下发，运营可调，不碰集合）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

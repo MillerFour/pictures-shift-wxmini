@@ -22,11 +22,30 @@ function toError(err: unknown): Error {
   return err instanceof Error ? err : new Error(String(err));
 }
 
+/**
+ * 云函数名注册表：接口按能力域原子化拆分后，一个能力域一个函数，
+ * 与 cloudfunctions/ 各目录一一对应。wx-identity 是项目无关复用件。
+ */
+export const CLOUD_FUNCTIONS = {
+  /** 微信登录身份：login / getUserInfo */
+  identity: 'wx-identity',
+  /** 应用配置（只读下发）：config / styles */
+  appConfig: 'app-config',
+  /** 免费次数（平台赠送）：getFreeQuota */
+  freeQuota: 'free-quota',
+  /** 交易：payPackages / createOrder / queryOrder / listOrders */
+  pay: 'pay',
+  /** 用户内容记录：savePhoto / listPhotos / listTasks */
+  records: 'records',
+  /** 同步生图：generate / models */
+  generate: 'generate-image',
+} as const;
+
 /** 封装一次云函数调用。云函数统一返回 ApiEnvelope，这里透出 data 或抛错。 */
 export function callFunction<T = unknown>(
   action: string,
   data: Record<string, unknown> = {},
-  name = 'imageShift',
+  name: string,
   timeout?: number,
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -55,10 +74,25 @@ export function callFunction<T = unknown>(
   });
 }
 
-/** 上传原图到云存储，返回 fileID。onProgress 接收 0-100 进度。 */
-export function uploadSource(filePath: string, onProgress?: (percent: number) => void): Promise<string> {
-  const ext = (filePath.split('.').pop() || 'jpg').toLowerCase();
-  const cloudPath = `source/${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
+/**
+ * 任务时间戳：YYYY_MM_DD_HH_MM_SS_SSS。
+ * 同一次生成的原图与成图共用这个前缀，在 task/{openid}/ 下按文件名配对
+ * （{stamp}_original.{ext} / {stamp}_result.{ext}），云函数侧会校验同格式。
+ */
+export function taskStamp(d = new Date()): string {
+  const p = (n: number, w = 2) => String(n).padStart(w, '0');
+  return (
+    `${d.getFullYear()}_${p(d.getMonth() + 1)}_${p(d.getDate())}` +
+    `_${p(d.getHours())}_${p(d.getMinutes())}_${p(d.getSeconds())}_${p(d.getMilliseconds(), 3)}`
+  );
+}
+
+/** 上传文件到指定云存储路径，返回 fileID。onProgress 接收 0-100 进度。 */
+export function uploadCloudFile(
+  cloudPath: string,
+  filePath: string,
+  onProgress?: (percent: number) => void,
+): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     wx.cloud
       .uploadFile({
@@ -103,6 +137,54 @@ export function resolveTempUrls(fileIDs: string[]): Promise<Record<string, strin
         resolve(map);
       })
       .catch(() => resolve({}));
+  });
+}
+
+/** 云存储文件的本地缓存路径（由 fileID 派生，稳定唯一） */
+export function cloudFileLocalPath(fileID: string): string {
+  return `${wx.env.USER_DATA_PATH}/cloud-${fileID.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+}
+
+/** 云存储文件的本地缓存是否已存在 */
+export function hasCachedCloudFile(fileID: string): boolean {
+  try {
+    wx.getFileSystemManager().accessSync(cloudFileLocalPath(fileID));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 后台把云存储文件下载覆盖到本地用户目录，返回 fileID -> 本地路径（仅成功项）。
+ * 用途：示例图等稳定 fileID 的素材本地化 —— 页面用本地路径渲染，零网络零闪动；
+ * 每次调用都会重新下载覆盖，素材替换（控制台覆盖上传同名文件）下次进入生效。
+ * 下载 / 写盘失败静默返回：已缓存的旧文件继续可用，未缓存的由调用方占位兜底。
+ */
+export function warmCloudFileCache(fileIDs: string[]): Promise<Record<string, string>> {
+  const fs = wx.getFileSystemManager();
+  const jobs = Array.from(new Set(fileIDs.filter(Boolean))).map(
+    (fileID): Promise<[string, string] | null> =>
+      new Promise((resolve) => {
+        wx.cloud
+          .downloadFile({ fileID })
+          .then((res) => {
+            try {
+              const localPath = cloudFileLocalPath(fileID);
+              // 先读后写：writeFileSync 对已存在文件是覆盖写（copyFile 对已存在目标行为不一）
+              fs.writeFileSync(localPath, fs.readFileSync(res.tempFilePath));
+              resolve([fileID, localPath]);
+            } catch {
+              resolve(null);
+            }
+          })
+          .catch(() => resolve(null));
+      }),
+  );
+  return Promise.all(jobs).then((list) => {
+    const map: Record<string, string> = {};
+    for (const item of list) if (item) map[item[0]] = item[1];
+    return map;
   });
 }
 /** 上传头像到云存储，返回 fileID。 */

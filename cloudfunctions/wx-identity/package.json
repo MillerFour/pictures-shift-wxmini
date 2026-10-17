@@ -1,0 +1,12 @@
+{
+  "name": "wx-identity",
+  "version": "1.0.0",
+  "description": "微信登录身份（项目无关复用件）：建档 / 查档案，只管身份字段",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "generate-image",
+  "version": "1.0.0",
+  "description": "同步生图：接收原图 fileID + 风格 id，服务端扣免费次数并出图，返回结果图 fileID/直链",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

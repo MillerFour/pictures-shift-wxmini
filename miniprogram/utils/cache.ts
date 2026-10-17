@@ -1,23 +1,20 @@
-/** 带 TTL 的本地缓存条目 */
+/** 本地缓存条目（at 保留时间戳，便于排查数据新旧） */
 interface CacheEntry<T> {
   at: number;
   value: T;
 }
 
 /**
- * 读缓存。过期即删。
+ * 读缓存（忽略年龄，允许陈旧）。
  *
- * 只用于「风格列表」「运行期配置」这类读多写少、允许短暂陈旧的数据。
+ * 画风列表 / 运行期配置走 stale-while-revalidate：先拿缓存渲染（哪怕已旧），
+ * 同时后台静默刷新写回 —— 服务端改完，用户下次打开小程序即更新。
  * 全部异常都吞掉：storage 被清空、空间不足，都不该让页面白屏。
  */
-export function readCache<T>(key: string, ttlMs: number): T | null {
+export function peekCache<T>(key: string): T | null {
   try {
     const hit = wx.getStorageSync(key) as CacheEntry<T> | '';
     if (!hit || typeof hit !== 'object') return null;
-    if (Date.now() - hit.at > ttlMs) {
-      wx.removeStorageSync(key);
-      return null;
-    }
     return hit.value ?? null;
   } catch {
     return null;

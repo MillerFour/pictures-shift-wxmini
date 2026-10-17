@@ -1,5 +1,5 @@
 import { getUser } from '../utils/auth';
-import { callFunction, uploadUserPhoto } from '../utils/cloud';
+import { CLOUD_FUNCTIONS, callFunction, uploadUserPhoto } from '../utils/cloud';
 
 export interface UserPhoto {
   /** 数据库记录 _id */
@@ -21,14 +21,18 @@ export interface UserPhoto {
 export async function uploadAndSavePhoto(filePath: string, sizeKB?: number): Promise<UserPhoto> {
   const user = getUser();
   const fileID = await uploadUserPhoto(filePath, user?.openid);
-  return callFunction<UserPhoto>('savePhoto', {
-    fileID,
-    sizeKB,
-    nickname: user?.nickname || '',
-  });
+  return callFunction<UserPhoto>(
+    'savePhoto',
+    {
+      fileID,
+      sizeKB,
+      nickname: user?.nickname || '',
+    },
+    CLOUD_FUNCTIONS.records,
+  );
 }
 
 /** 拉取当前用户的照片记录（按时间倒序）；展示需自行 getTempFileURL(fileID)。 */
 export async function fetchUserPhotos(limit = 50): Promise<UserPhoto[]> {
-  return callFunction<UserPhoto[]>('listPhotos', { limit });
+  return callFunction<UserPhoto[]>('listPhotos', { limit }, CLOUD_FUNCTIONS.records);
 }

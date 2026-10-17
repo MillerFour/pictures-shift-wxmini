@@ -1,34 +1,31 @@
 /**
- * 示例功能的素材。
+ * 云端示例素材的 fileID（云存储根目录 example/ 文件夹）。
  *
- * 示例用「一张原图 + 各风格对应的成片」做对比滑块，让用户直观感受差异。
- * 素材由 server/scripts/gen-examples.ts 走正式链路生成（同一只小熊猫、同一构图，
- * 仅画风不同，对比才直观）；支持本地路径或网络 URL。
+ * 路径直接写死、不走配置：示例素材极少变动，替换素材时在控制台
+ * 覆盖上传同名文件（路径不变 → fileID 不变），代码无需任何改动。
  *
- * 首屏的画风芯片点一下就切换这里的成片：选了某个画风、预览却不动，
- * 等于告诉用户「这个选择和预览无关」，联动是必须的。
+ * fileID 格式：cloud://<环境ID>.<存储桶>/<路径>（注意环境与桶之间是「.」）。
+ * 换云环境时才需要改 FILE_ID_HOST —— 从控制台任一文件详情的 fileID 里
+ * 复制 cloud://xxx.yyy 整段替换。
  */
-export interface ExampleSet {
-  /** 示例原图 */
-  original: string;
-  /** 各风格 id → 成片示例图 */
-  after: Record<string, string>;
-}
 
-export const EXAMPLE: ExampleSet = {
-  original: '/assets/example-panda.jpg',
-  after: {
-    ghibli: '/assets/example-panda-ghibli.jpg',
-    anime: '/assets/example-panda-anime.jpg',
-    pixar: '/assets/example-panda-pixar.jpg',
-    film: '/assets/example-panda-film.jpg',
-  },
+/** fileID 前缀：cloud://<环境ID>.<存储桶> */
+const FILE_ID_HOST =
+  'cloud://piture-shift-d9gy1p5tnf310cf3f.7069-piture-shift-d9gy1p5tnf310cf3f-1505601365';
+
+/** 全风格共用的示例原图（example/original.jpg，各画风效果图都由它生成） */
+export const EXAMPLE_ORIGINAL_FILE_ID = `${FILE_ID_HOST}/example/original.jpg`;
+
+/** 各画风效果图：example/{key}.jpg，键 = styles._id；新增画风要配示例图时在此补一条 */
+export const EXAMPLE_AFTER_FILE_IDS: Record<string, string> = {
+  ghibli: `${FILE_ID_HOST}/example/ghibli.jpg`,
+  anime: `${FILE_ID_HOST}/example/anime.jpg`,
+  pixar: `${FILE_ID_HOST}/example/pixar.jpg`,
+  film: `${FILE_ID_HOST}/example/film.jpg`,
 };
 
-/** 首屏默认展示的画风，也是「画风没有对应素材时」的兜底 */
-export const DEFAULT_EXAMPLE_STYLE = 'ghibli';
-
-/** 画风没有本地示例时回退到默认那张，保证滑块两侧始终是「原图 vs 风格化」 */
-export function exampleAfterOf(styleId: string): string {
-  return EXAMPLE.after[styleId] ?? EXAMPLE.after[DEFAULT_EXAMPLE_STYLE] ?? EXAMPLE.original;
-}
+/** 全部示例素材 fileID（共用原图 + 各画风效果图）：进入首页时一次性预热到本地 */
+export const ALL_EXAMPLE_FILE_IDS: string[] = [
+  EXAMPLE_ORIGINAL_FILE_ID,
+  ...Object.values(EXAMPLE_AFTER_FILE_IDS),
+];

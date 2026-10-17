@@ -1,0 +1,12 @@
+{
+  "name": "quota",
+  "version": "1.0.0",
+  "description": "创作次数域：getQuota（含新人免费次数发放）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  },
+  "engines": {
+    "node": "18"
+  }
+}

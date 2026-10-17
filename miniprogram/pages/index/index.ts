@@ -1,8 +1,8 @@
 import { generateImage, loadModels, loadRuntimeConfig, loadStyles } from '../../services/api';
 import { buyPackage, fetchPackages, PayError, PayPackage } from '../../services/pay';
-import { resolveTempUrl } from '../../utils/cloud';
+import { resolveTempUrl, hasCachedCloudFile, cloudFileLocalPath, warmCloudFileCache } from '../../utils/cloud';
 import { STYLE_FALLBACK } from '../../constants/styles';
-import { EXAMPLE, exampleAfterOf } from '../../constants/examples';
+import { ALL_EXAMPLE_FILE_IDS, EXAMPLE_AFTER_FILE_IDS, EXAMPLE_ORIGINAL_FILE_ID } from '../../constants/examples';
 
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { ApiError, toFriendlyMessage } from '../../utils/error';
@@ -25,6 +25,17 @@ type Step = 'upload' | 'style' | 'result';
 
 const FALLBACK_STYLE = STYLE_FALLBACK[0];
 
+/**
+ * 示例素材全量预热：进首页把 example/ 下所有图片一次性下载到本地用户目录。
+ * 模块级缓存 Promise —— onLoad 发起，之后切画风的 refreshExample 复用同一次下载批次，
+ * 不按画风重复下载。每次冷启动重新预热（全量覆盖下载），素材替换下次进入生效。
+ */
+let exampleWarmUp: Promise<Record<string, string>> | null = null;
+function warmExampleCache(): Promise<Record<string, string>> {
+  if (!exampleWarmUp) exampleWarmUp = warmCloudFileCache(ALL_EXAMPLE_FILE_IDS);
+  return exampleWarmUp;
+}
+
 function formatCost(ms: number): string {
   return ms < 1000 ? `${ms} 毫秒` : `${(ms / 1000).toFixed(1)} 秒`;
 }
@@ -38,9 +49,9 @@ Page({
     /** 步骤条用：1 / 2 / 3。由 goStep 统一维护，不要手动改 */
     stepIdx: 1,
 
-    /** 示例：原图与成片。成片跟选中画风联动（见 syncSelection） */
-    exampleOriginal: EXAMPLE.original,
-    exampleAfter: exampleAfterOf(FALLBACK_STYLE.id),
+    /** 示例：原图与成片，fileID 写死在 constants/examples.ts（云存储 example/），空 = 显示占位 */
+    exampleOriginal: '',
+    exampleAfter: '',
 
     styles: [] as StyleMeta[],
     styleId: FALLBACK_STYLE.id,
@@ -98,8 +109,17 @@ Page({
   alive: true,
   timer: null as number | null,
 
+  /**
+   * 量出的布局参数（不参与渲染，挂实例上）：
+   * fullH = 菜单隐藏时的最大可视高度；barPx = 菜单显示时占用的那段；top = 页面容器顶部偏移（导航栏）。
+   * 菜单显隐会随步骤切换，滚动区高度要按这两块动态拼装，见 applyScrollArea。
+   */
+  layout: { fullH: 0, barPx: 0, top: 0 },
+
   onLoad() {
     this.alive = true;
+    // 进首页立即全量预热示例素材到本地（后台静默，之后切画风全部本地秒开）
+    void warmExampleCache();
     void this.hydrate();
   },
 
@@ -110,17 +130,20 @@ Page({
   onShow() {
     // 底部菜单高亮由本页自己同步：此刻 route 必然正确，不受框架复用实例的时序影响
     syncTabBarFromPage(this);
+    // 菜单显隐跟着步骤走，滚动区高度一并对齐（还没量出来时 applyScrollArea 会自己跳过）
+    this.applyScrollArea();
     // 登录后静默校准配额（支付成功页返回时也走这里刷新次数）
     if (isLoggedIn()) void refreshQuota();
   },
 
   /**
-   * 量出滚动区真实高度。
+   * 量出滚动区的构成参数。
    *
    * 不能写死 100vh：自定义 tabBar 是覆盖在页面上的独立渲染层，不同机型/版本上
    * 框架给页面留的可视高度并不一致 —— 有的已经把 tabBar 那段扣掉了，有的没有。
    * 前者还按 100vh 取，页面底部就会多出一条能拖动的空白；后者不扣，底部操作条
-   * 会被菜单压住。所以量一次页面容器的实际高度，再决定要不要减去 tabBar 那一段。
+   * 会被菜单压住。所以量一次页面容器的实际高度，记下构成，再由 applyScrollArea
+   * 按菜单显隐拼装出滚动区高度。
    */
   measureScrollArea(): void {
     const sys = wx.getSystemInfoSync();
@@ -136,12 +159,26 @@ Page({
 
         // 框架已预留过 tabBar 高度时，页面容器会明显矮于 windowHeight，不再重复减
         const reserved = sys.windowHeight - rect.height;
-        const visible = Math.min(rect.height, sys.windowHeight) - (reserved < barPx / 2 ? barPx : 0);
-
-        const h = Math.round(visible - rect.top);
-        if (h > 0) this.setData({ scrollH: h });
+        this.layout = {
+          fullH: Math.min(rect.height, sys.windowHeight),
+          barPx: reserved < barPx / 2 ? barPx : 0,
+          top: rect.top,
+        };
+        this.applyScrollArea();
       })
       .exec();
+  },
+
+  /**
+   * 滚动区高度跟随菜单显隐。
+   * 上传步菜单显示，让出菜单那一段；选风格/出图步菜单已隐藏（半透明淡出），
+   * 那段空白若不回收，底部操作条会被顶出可视区、只能靠滚动才能看到。
+   */
+  applyScrollArea(): void {
+    const { fullH, barPx, top } = this.layout;
+    if (!fullH) return; // 还没量出来，先吃 CSS 的 100vh 兜底
+    const h = Math.round(fullH - (this.data.step === 'upload' ? barPx : 0) - top);
+    if (h > 0 && h !== this.data.scrollH) this.setData({ scrollH: h });
   },
 
   onUnload() {
@@ -170,6 +207,8 @@ Page({
     // 首页向导进入内页（选风格/出图）时隐藏底部菜单；回到上传步骤恢复显示。
     // 生成中的隐藏由 submit 开头单独控制，且早于 goStep('result')，不冲突。
     setTabBarHidden(step !== 'upload');
+    // 菜单显隐切换的同时回收/让出菜单占的那段高度，底部操作条始终贴在可视区底
+    this.applyScrollArea();
   },
 
   /** 同步选中画风 + 主按钮文案 + 示例预览：画风相关的展示全部收在这里，不散落 */
@@ -180,7 +219,50 @@ Page({
       styleId,
       styleName: name,
       submitLabel: `生成${name}风格`,
-      exampleAfter: exampleAfterOf(styleId),
+    });
+    // 示例素材 fileID 写死在 constants/examples.ts，按选中画风换临时直链
+    this.refreshExample(picked);
+  },
+
+  /**
+   * 画风示例素材：共用原图 + 当前画风效果图，fileID 写死在 constants/examples.ts。
+   * 渲染走本地缓存（onLoad 已全量预热）；切换画风时本地没命中的，
+   * 等 warmExampleCache 批次完成后补渲染。批次缺失（文件没传 / 下载失败）
+   * 且本地无缓存时显示占位。
+   */
+  refreshExample(meta: StyleMeta | undefined): void {
+    const afterID = meta ? EXAMPLE_AFTER_FILE_IDS[meta.id] : '';
+    if (!afterID) {
+      this.setData({ exampleOriginal: '', exampleAfter: '' });
+      return;
+    }
+    // 本地缓存命中：立即用本地路径渲染，不经过任何网络
+    const localOriginal = hasCachedCloudFile(EXAMPLE_ORIGINAL_FILE_ID);
+    const localAfter = hasCachedCloudFile(afterID);
+    if (localOriginal && localAfter) {
+      this.setData({
+        exampleOriginal: cloudFileLocalPath(EXAMPLE_ORIGINAL_FILE_ID),
+        exampleAfter: cloudFileLocalPath(afterID),
+      });
+      return;
+    }
+
+    // 本地未命中：等全量预热批次完成后补渲染（切画风时大概率已完成）
+    void warmExampleCache().then((map) => {
+      const original = map[EXAMPLE_ORIGINAL_FILE_ID];
+      const after = map[afterID];
+      if (!this.alive) return;
+      if (original && after) {
+        this.setData({
+          exampleOriginal: cloudFileLocalPath(EXAMPLE_ORIGINAL_FILE_ID),
+          exampleAfter: cloudFileLocalPath(afterID),
+        });
+        return;
+      }
+      console.warn('[example] 示例图下载失败（离线或文件缺失），缺失项：', {
+        originalOK: Boolean(original),
+        afterOK: Boolean(after),
+      });
     });
   },
 

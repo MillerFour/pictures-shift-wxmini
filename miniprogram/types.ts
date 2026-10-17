@@ -14,9 +14,6 @@ export interface ApiEnvelope<T> {
   requestId?: string;
 }
 
-/** 转换任务状态机：PENDING → RUNNING → SUCCEEDED / FAILED */
-export type TaskStatus = 'PENDING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED';
-
 /**
  * 风格展示元数据。
  *
@@ -36,8 +33,8 @@ export interface StyleMeta {
   swatch: string;
 }
 
-/** 历史创作记录（生图成功后由服务端落库） */
-export interface Creation {
+/** 任务档案（一次成功生成的记录，由服务端写入 tasks 集合） */
+export interface TaskRecord {
   id: string;
   styleName: string;
   modelName: string;
@@ -45,7 +42,7 @@ export interface Creation {
   strength: number;
   /** 端到端耗时（毫秒） */
   costMs: number;
-  /** 结果图在云存储的 fileID，展示前需换取临时直链 */
+  /** 结果图在云存储的 fileID（task/{openid}/{stamp}_result.{ext}），展示前换临时直链 */
   resultFileID: string;
   createdAt: number;
 }
@@ -65,24 +62,4 @@ export interface RuntimeConfig {
   recommendedLongEdge: number;
   /** 运营位提示语，没有就不展示 */
   notice?: string;
-}
-
-/** 提交转换任务后的回执 */
-export interface CreateTaskResponse {
-  taskId: string;
-  status: TaskStatus;
-}
-
-/** 任务详情（轮询接口返回） */
-export interface TaskDetail {
-  taskId: string;
-  status: TaskStatus;
-  /** 0-100，仅用于展示，BFF 拿不到真实进度时不下发 */
-  progress?: number;
-  /** 风格化结果图地址，小程序自有域名下的相对路径，可直接 <image> 渲染 */
-  resultUrl?: string;
-  /** 失败原因，成功时为空 */
-  errorMessage?: string;
-  /** 端到端耗时（毫秒），用于结果页展示 */
-  costMs?: number;
 }

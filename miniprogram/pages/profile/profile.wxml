@@ -41,7 +41,7 @@
     <view class="block">
       <view class="row block-head"><text class="t-h2">常用</text></view>
       <view class="menu card">
-        <view class="menu-item" hover-class="tap" bindtap="onGoHistory">
+        <view wx:if="{{loggedIn}}" class="menu-item" hover-class="tap" bindtap="onGoHistory">
           <text class="menu-name">历史创作</text><text class="menu-arrow">›</text>
         </view>
         <view class="menu-item" hover-class="tap" bindtap="onGoFaq">

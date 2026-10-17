@@ -1,11 +1,11 @@
-import { fetchCreations } from '../../services/api';
+import { fetchTasks } from '../../services/api';
 import { resolveTempUrls } from '../../utils/cloud';
 import { saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
-import type { Creation } from '../../types';
+import type { TaskRecord } from '../../types';
 
 /**
- * 历史创作：生图成功后由服务端落库（creations 集合），这里分页读取。
+ * 历史创作：生图成功后由服务端落库（tasks 集合），这里分页读取。
  *
  * 直链策略：结果图存的是云存储 fileID（永久有效），列表渲染前按页批量
  * getTempFileURL 换临时直链 —— 单条逐个换在几十条列表下开销太大。
@@ -67,7 +67,7 @@ Page({
   async reload(): Promise<void> {
     this.setData({ loading: true });
     try {
-      const list = await fetchCreations(PAGE_SIZE, 0);
+      const list = await fetchTasks(PAGE_SIZE, 0);
       const items = await this.decorate(list);
       this.skip = list.length;
       this.setData({ items, hasMore: list.length >= PAGE_SIZE, loading: false });
@@ -81,7 +81,7 @@ Page({
     if (this.loadingMore) return;
     this.loadingMore = true;
     try {
-      const list = await fetchCreations(PAGE_SIZE, this.skip);
+      const list = await fetchTasks(PAGE_SIZE, this.skip);
       const decorated = await this.decorate(list);
       this.skip += list.length;
       this.setData({
@@ -96,7 +96,7 @@ Page({
   },
 
   /** 组装展示数据：批量换直链 + 时间/耗时格式化 */
-  async decorate(list: Creation[]): Promise<HistoryItem[]> {
+  async decorate(list: TaskRecord[]): Promise<HistoryItem[]> {
     if (!list.length) return [];
     const urls = await resolveTempUrls(list.map((c) => c.resultFileID));
     return list.map((c) => ({

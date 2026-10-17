@@ -1,4 +1,4 @@
-import { callFunction } from '../utils/cloud';
+import { CLOUD_FUNCTIONS, callFunction } from '../utils/cloud';
 
 /**
  * 虚拟支付（wx.requestVirtualPayment · 道具直购）前端编排。
@@ -106,11 +106,11 @@ export interface PayPackagesResult {
 }
 
 export function fetchPackages(): Promise<PayPackagesResult> {
-  return callFunction<PayPackagesResult>('payPackages');
+  return callFunction<PayPackagesResult>('payPackages', {}, CLOUD_FUNCTIONS.pay);
 }
 
-export function fetchQuota(): Promise<number> {
-  return callFunction<{ quota: number }>('getQuota').then((r) => r.quota);
+export function fetchFreeQuota(): Promise<number> {
+  return callFunction<{ quota: number }>('getFreeQuota', {}, CLOUD_FUNCTIONS.freeQuota).then((r) => r.quota);
 }
 
 function wxLogin(): Promise<string> {
@@ -152,10 +152,14 @@ function requestVirtualPayment(payData: PayData): Promise<void> {
  * 真实支付时，客户端 success 回调只是 UI 反馈，次数到账一律以服务端查单确认为准。
  */
 export async function buyPackage(packageId: string): Promise<BuyResult> {
-  const created = await callFunction<{ outTradeNo: string; mock?: boolean; payData?: PayData }>('createOrder', {
-    productId: packageId,
-    code: await wxLogin(),
-  });
+  const created = await callFunction<{ outTradeNo: string; mock?: boolean; payData?: PayData }>(
+    'createOrder',
+    {
+      productId: packageId,
+      code: await wxLogin(),
+    },
+    CLOUD_FUNCTIONS.pay,
+  );
 
   if (created.mock || !created.payData) {
     // 演示模式：服务端已模拟发货，直接确认订单拿最新配额
@@ -190,5 +194,5 @@ export async function buyPackage(packageId: string): Promise<BuyResult> {
 
 /** 查询订单状态（服务端会顺带查单补发货）。支付成功页轮询使用。 */
 export function confirmOrder(outTradeNo: string): Promise<OrderResult> {
-  return callFunction<OrderResult>('queryOrder', { outTradeNo });
+  return callFunction<OrderResult>('queryOrder', { outTradeNo }, CLOUD_FUNCTIONS.pay);
 }

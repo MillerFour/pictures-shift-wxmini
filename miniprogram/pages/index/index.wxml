@@ -49,7 +49,11 @@
             <text class="t-cap">点下方画风立即切换效果，挑一个你喜欢的吧~</text>
           </view>
 
-          <compare-slider before="{{exampleOriginal}}" after="{{exampleAfter}}" />
+          <compare-slider wx:if="{{exampleOriginal && exampleAfter}}" before="{{exampleOriginal}}" after="{{exampleAfter}}" />
+          <!-- 示例素材未配置（或直链未就绪）时的占位：引导直接上传，不阻塞主流程 -->
+          <view wx:else class="example-empty">
+            <text class="example-empty-text">示例图筹备中 · 先挑个画风，上传照片直接生成</text>
+          </view>
 
           <!-- 画风平铺一行：藏在横向滚动后面的选项等于让用户多操作一步，这里一屏看完 -->
           <view class="style-row">
