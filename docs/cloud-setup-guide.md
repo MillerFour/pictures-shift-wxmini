@@ -242,6 +242,7 @@ task/{openid}/{stamp}_result.{ext}     ← 云函数生成后落盘
 | 8 | 控制台把某模型 `enabled: false` | 重开小程序模型选择器少一项；带该 modelId 生图报「模型 xxx 不可用」（400） |
 | 9 | 购买次数包（NEED_PAY=false） | 下单即模拟发货，`orders` 出现 MOCK 单，`users.quota` 增加 |
 | 10 | 历史创作菜单 | 未登录不显示，登录后显示 |
+| 11 | 退出登录 → 再次登录 | 直接恢复登录态（不弹授权表单）；云存储 `avatar/` 下不新增文件（同一个人只有一份头像） |
 
 ---
 
@@ -258,5 +259,5 @@ task/{openid}/{stamp}_result.{ext}     ← 云函数生成后落盘
 | 生图报「模型 xxx 不可用」 | models 集合无此 `_id`、已 `enabled: false`，或对应引擎密钥未配置 |
 | 任务文件没落到 task/{openid}/ | 确认部署的是最新 `generate-image`（含 taskStamp 逻辑） |
 | 示例预览不显示云端图 | ① 云存储权限须为「所有用户可读」（报 `STORAGE_EXCEED_AUTHORITY` 即此项）；② 确认 `constants/examples.ts` 的 `FILE_ID_HOST` 是真实存储前缀；③ `example/` 下有对应文件（原图与效果图缺一整组不显示） |
-| 支付报「虚拟支付未配置」 | `pay` 的 XPAY_* 环境变量缺失 |
+| 支付报「虚拟支付未配置」 | `NEED_PAY=true` 时 XPAY_* 环境变量缺失；`NEED_PAY=false` 演示模式还报此错 = 部署的是旧版 `pay`（未含 mock 查单豁免），重新上传部署 |
 | 推送验签失败 | `xpayNotify` 的 `XPAY_APP_KEY` 与 MP 后台不一致，或 path 与 `XPAY_NOTIFY_PATH` 不一致 |

@@ -1,4 +1,4 @@
-import { saveUser, type WxUser } from '../../utils/auth';
+import { getUser, saveUser, type WxUser } from '../../utils/auth';
 import { setTabBarHidden } from '../../utils/tabbar';
 import { checkUser, login } from '../../services/auth';
 import { uploadAvatar } from '../../utils/cloud';
@@ -40,7 +40,15 @@ Component({
           return;
         }
       } catch {
-        // 查库异常降级为显示授权表单，让用户走手动登录
+        // 查库异常降级：本地已有完整会话则直接恢复登录（不弹表单，避免重复上传头像）；
+        // 真正未注册的用户才显示授权表单
+        const local = getUser();
+        if (local && local.openid && local.avatarFileID) {
+          saveUser(local);
+          this.triggerEvent('login', local);
+          this.triggerEvent('close');
+          return;
+        }
       } finally {
         this.setData({ checking: false });
       }
@@ -114,6 +122,15 @@ Component({
       }
       this.setData({ loading: true });
       try {
+        // 确认前复检云端档案：表单可能是 checkUser 网络失败降级出现的，档案其实已存在 ——
+        // 直接恢复登录，绝不再上传一份头像（防云存储堆积同一个人的重复头像）
+        const recheck = await checkUser();
+        if (recheck.exists && recheck.user) {
+          saveUser(recheck.user);
+          this.triggerEvent('login', recheck.user);
+          this.reset();
+          return;
+        }
         // 微信给的头像是临时路径，先上传云存储换 fileID 再存库，避免失效
         const avatarFileID = await uploadAvatar(this.data.avatarUrl);
         const { openid } = await login({

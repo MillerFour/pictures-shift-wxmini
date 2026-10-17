@@ -135,13 +135,19 @@ async function actionCreateOrder(data, rid, openid) {
  */
 async function actionQueryOrder(data, rid, openid) {
   if (!openid) return fail(ErrorCode.UNAUTHORIZED, '无法识别用户身份', rid);
-  if (!xpay.isConfigured(config.xpay)) return fail(ErrorCode.PAY_NOT_CONFIGURED, '虚拟支付未配置', rid);
   if (!data.outTradeNo || typeof data.outTradeNo !== 'string') return fail(ErrorCode.BAD_REQUEST, '缺少订单号', rid);
 
   try {
     const res = await ordersCollection().doc(data.outTradeNo).get();
     const order = res && res.data;
     if (!order || order.openid !== openid) return fail(ErrorCode.TASK_NOT_FOUND, '订单不存在', rid);
+
+    // mock 单（NEED_PAY=false 演示发货：wxOrderId=MOCK，建单即 DELIVERED）不依赖 xpay 配置；
+    // syncOrder 对终态订单直接短路，不会打平台接口 —— 只有真实未终态订单才要求配置齐全
+    const needsXpay = config.pay.needPay && order.wxOrderId !== 'MOCK';
+    if (needsXpay && !xpay.isConfigured(config.xpay)) {
+      return fail(ErrorCode.PAY_NOT_CONFIGURED, '虚拟支付未配置', rid);
+    }
 
     const synced = await pay.syncOrder(order, config.xpay, xpay.queryOrder, xpay.isPaidStatus);
     const quota = await pay.ensureQuota(openid, config.freeQuota);
