@@ -7,8 +7,12 @@ const { ErrorCode, ok, fail } = require('./envelope');
 const { ensureQuota } = require('./quota');
 const { ensureCollections } = require('./db-init');
 
-/** 免费次数的单次发放额度（注册赠送 / 平台活动派发；与 generate-image 云函数的 FREE_QUOTA 保持一致） */
-const FREE_QUOTA = Number(process.env.FREE_QUOTA) || 1;
+/**
+ * 免费次数的单次发放额度（注册赠送 / 平台活动派发；与 generate-image / pay 的 FREE_QUOTA 保持一致）。
+ * 显式配置 0 = 不赠送也合法；其余非法值回落 1。
+ */
+const rawFreeQuota = Number(process.env.FREE_QUOTA);
+const FREE_QUOTA = Number.isInteger(rawFreeQuota) && rawFreeQuota >= 0 ? rawFreeQuota : 1;
 
 /**
  * 免费次数 —— 唯一接口 getFreeQuota。
@@ -25,17 +29,22 @@ function requestId() {
 
 exports.main = async (event) => {
   const rid = requestId();
-  await ensureCollections(['users']);
-  if (!event || event.action !== 'getFreeQuota') {
-    return fail(
-      ErrorCode.BAD_REQUEST,
-      event && event.action ? `未知 action：${event.action}` : '缺少 action',
-      rid,
-    );
+  try {
+    await ensureCollections(['users']);
+    if (!event || event.action !== 'getFreeQuota') {
+      return fail(
+        ErrorCode.BAD_REQUEST,
+        event && event.action ? `未知 action：${event.action}` : '缺少 action',
+        rid,
+      );
+    }
+    const openid = cloud.getWXContext().OPENID || '';
+    if (!openid) return fail(ErrorCode.UNAUTHORIZED, '无法识别用户身份', rid);
+    const quota = await ensureQuota(openid, FREE_QUOTA);
+    if (quota === null) return fail(ErrorCode.UNAUTHORIZED, '请先登录', rid);
+    return ok({ quota }, rid);
+  } catch (err) {
+    console.error('[free-quota] 处理失败', err);
+    return fail(ErrorCode.INTERNAL, '服务暂时不可用，请稍后重试', rid);
   }
-  const openid = cloud.getWXContext().OPENID || '';
-  if (!openid) return fail(ErrorCode.UNAUTHORIZED, '无法识别用户身份', rid);
-  const quota = await ensureQuota(openid, FREE_QUOTA);
-  if (quota === null) return fail(ErrorCode.UNAUTHORIZED, '请先登录', rid);
-  return ok({ quota }, rid);
 };

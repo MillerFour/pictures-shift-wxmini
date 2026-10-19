@@ -66,6 +66,40 @@ function toDataUri(source) {
   return `data:${source.contentType};base64,${source.bytes.toString('base64')}`;
 }
 
+/** 强度 < 50 时叠加的保身份约束：低强度下重点是「别把人画陌生」 */
+function buildPrompt(style, strength) {
+  return [style.prompt, strength < 50 ? '尽可能保留原图人物的五官、发型与姿态，只做画风转译' : '']
+    .filter(Boolean)
+    .join('。');
+}
+
+/**
+ * 各厂商 HTTP 调用的公共样板：网络错误 / 非 JSON / 非 2xx 一律包装成 ProviderError。
+ * label 是面向用户的厂商名（方舟 / TokenHub / 百炼），进错误文案。
+ * 返回的 call 签名与 httpJson 一致：call(url, { method, headers, body })，body 为已序列化字符串。
+ */
+function makeJsonCaller(provider, label) {
+  return async function call(url, init) {
+    let res;
+    try {
+      res = await httpJson(url, init);
+    } catch (e) {
+      throw new ProviderError(provider, `请求${label}失败：${e.message}`);
+    }
+    const { status: resStatus, text } = res;
+    let payload;
+    try {
+      payload = text ? JSON.parse(text) : {};
+    } catch {
+      throw new ProviderError(provider, `${label}返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
+    }
+    if (resStatus < 200 || resStatus >= 300) {
+      throw new ProviderError(provider, readVendorError(payload) || `${label}返回 HTTP ${resStatus}`);
+    }
+    return payload;
+  };
+}
+
 /**
  * 云函数容器没有全局 fetch（实测 TCB Node 运行时），HTTP 统一走 https 模块。
  * 返回 { status, text }；网络层错误与超时抛 Error，由调用方包装成 ProviderError。
@@ -106,4 +140,4 @@ function httpJson(url, { method = 'GET', headers = {}, body = '', timeoutMs = 30
   });
 }
 
-module.exports = { ProviderError, readVendorError, downloadImage, toDataUri, httpJson };
+module.exports = { ProviderError, readVendorError, downloadImage, toDataUri, httpJson, buildPrompt, makeJsonCaller };

@@ -8,7 +8,7 @@ export interface PreparedImage {
   size: number;
 }
 
-/** 读文件体积。拿不到就返回 0，最终校验交给 BFF */
+/** 读文件体积。拿不到就返回 0，最终校验交给云端 */
 export function fileSize(filePath: string): Promise<number> {
   return new Promise((resolve) => {
     wx.getFileSystemManager().stat({
@@ -22,7 +22,7 @@ export function fileSize(filePath: string): Promise<number> {
 /**
  * 压缩到适合上传的尺寸。
  *
- * 手机原图普遍 3-8MB，直接传会被 BFF 体积限制拦下，上传也慢；
+ * 手机原图普遍 3-8MB，直接传会被云端体积限制拦下，上传也慢；
  * 而长边超过 1280px 对风格化结果没有可见收益，反而拖慢出图。
  */
 export async function prepareImage(src: string): Promise<PreparedImage> {

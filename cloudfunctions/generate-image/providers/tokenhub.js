@@ -1,32 +1,19 @@
 'use strict';
-const { ProviderError, downloadImage, readVendorError, toDataUri, httpJson } = require('./types');
+const { ProviderError, downloadImage, toDataUri, makeJsonCaller, buildPrompt } = require('./types');
 
 function createTokenHubProvider(cfg) {
+  const call = makeJsonCaller('tokenhub', 'TokenHub');
   const headers = {
     Authorization: `Bearer ${cfg.apiKey}`,
     'Content-Type': 'application/json',
   };
 
-  async function call(body) {
-    let res;
-    try {
-      res = await httpJson(`${cfg.baseUrl}/wand/hunyuan-image/v35-generation`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
-    } catch (e) {
-      throw new ProviderError('tokenhub', `请求 TokenHub 失败：${e.message}`);
-    }
-    const { status: resStatus, text } = res;
-    let payload;
-    try {
-      payload = text ? JSON.parse(text) : {};
-    } catch {
-      throw new ProviderError('tokenhub', `TokenHub 返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
-    }
-    if (resStatus < 200 || resStatus >= 300) throw new ProviderError('tokenhub', readVendorError(payload) || `TokenHub 返回 HTTP ${resStatus}`);
-    return payload;
+  async function callGenerate(body) {
+    return call(`${cfg.baseUrl}/wand/hunyuan-image/v35-generation`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
   }
 
   /**
@@ -72,15 +59,9 @@ function createTokenHubProvider(cfg) {
       }
       const imageUrl = useBase64 ? toDataUri(input.source) : input.publicSourceUrl;
 
-      const style = input.style;
-      const text = [
-        style.prompt,
-        input.strength < 50 ? '尽可能保留原图人物的五官、发型与姿态，只做画风转译' : '',
-      ]
-        .filter(Boolean)
-        .join('。');
+      const text = buildPrompt(input.style, input.strength);
 
-      const payload = await call({
+      const payload = await callGenerate({
         model: cfg.model,
         session: `ps-${input.taskId}`,
         messages: [

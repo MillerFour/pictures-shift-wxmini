@@ -1,24 +1,8 @@
 /**
- * 传输层通用信封。
- *
- * BFF 与小程序约定：HTTP 状态码表达「传输是否成功」，
- * code 表达「业务是否成功」，0 为成功。
- * 这样一个接口的失败原因只需看 code，不用逐个接口约定 HTTP 状态。
- */
-export interface ApiEnvelope<T> {
-  /** 0 = 成功，其余为业务错误码 */
-  code: number;
-  message: string;
-  data: T;
-  /** 排查问题时提供给开发者的追踪号 */
-  requestId?: string;
-}
-
-/**
  * 风格展示元数据。
  *
- * 注意这里的 prompt / 模型参数不在小程序端 —— 它们留在 BFF，
- * 这样调风格或加风格只要改服务端配置，不用等小程序审核发版。
+ * 注意这里的 prompt / 模型参数不在小程序端 —— 它们留在云函数与云数据库，
+ * 这样调风格或加风格只要改云端配置，不用等小程序审核发版。
  */
 export interface StyleMeta {
   id: string;
@@ -54,9 +38,9 @@ export interface ModelMeta {
   desc: string;
 }
 
-/** BFF 下发的运行期配置 */
+/** 云端下发的运行期配置 */
 export interface RuntimeConfig {
-  /** 单张原图体积上限（MB），超了 BFF 直接拒收 */
+  /** 单张原图体积上限（MB），超了云端直接拒收 */
   maxFileSizeMB: number;
   /** 建议压缩到的长边像素 */
   recommendedLongEdge: number;

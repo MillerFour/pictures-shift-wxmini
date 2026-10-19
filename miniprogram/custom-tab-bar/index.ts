@@ -1,4 +1,4 @@
-import { TAB_LIST, isTabBarHidden, syncTabBarFromPage } from '../utils/tabbar';
+import { TAB_LIST, isTabBarHidden, syncTabBarFromPage, currentRoute } from '../utils/tabbar';
 
 /**
  * 自定义底部 tabBar。
@@ -9,12 +9,6 @@ import { TAB_LIST, isTabBarHidden, syncTabBarFromPage } from '../utils/tabbar';
  * 组件只负责渲染与点击；选中态由 tab 页在自己的 onShow 里调
  * utils/tabbar.syncTabBarFromPage 同步过来 —— 见该文件里「为什么选中态由页面同步」。
  */
-
-function currentRoute(): string {
-  const pages = getCurrentPages();
-  const current = pages[pages.length - 1];
-  return (current ? current.route : '').replace(/^\//, '');
-}
 
 Component({
   data: {

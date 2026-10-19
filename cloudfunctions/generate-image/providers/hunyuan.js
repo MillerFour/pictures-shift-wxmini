@@ -1,6 +1,6 @@
 'use strict';
 const cloud = require('wx-server-sdk');
-const { ProviderError, downloadImage } = require('./types');
+const { ProviderError, downloadImage, buildPrompt } = require('./types');
 
 /**
  * 腾讯云开发（CloudBase）原生混元图生图。
@@ -11,15 +11,6 @@ const { ProviderError, downloadImage } = require('./types');
  */
 function createHunyuanProvider(cfg = {}) {
   const model = cfg.model || 'HY-Image-v3.0-I2I-ToB-v1.0.1';
-
-  function buildPrompt(style, strength) {
-    return [
-      style.prompt,
-      strength < 50 ? '尽可能保留原图人物的五官、发型与姿态，只做画风转译' : '',
-    ]
-      .filter(Boolean)
-      .join('。');
-  }
 
   return {
     name: 'hunyuan',

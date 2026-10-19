@@ -41,22 +41,42 @@ async function fetchStyles(): Promise<StyleMeta[] | null> {
   }
 }
 
+/** 缓存命中判定：数组要有元素才算命中，对象非空即可 */
+function cacheHit(value: unknown): boolean {
+  return Array.isArray(value) ? value.length > 0 : Boolean(value);
+}
+
+/**
+ * stale-while-revalidate 的读取半边：有缓存立即返回 + 后台静默刷新；
+ * 无缓存时等待首拉，首拉空值 / 失败回落 fallback 且不写缓存（防空值覆盖真值）。
+ * writeOnFirstLoad：首拉成功是否落缓存 —— 模型列表与引擎密钥状态强相关、
+ * 变化频繁，刻意不落缓存保证每次冷启动都拿最新；画风 / 配置正常落。
+ */
+function swrLoad<T>(options: {
+  key: string;
+  fetcher: () => Promise<T | null>;
+  fallback: T;
+  writeOnFirstLoad: boolean;
+}): Promise<T> {
+  const cached = peekCache<T>(options.key);
+  if (cacheHit(cached)) {
+    revalidate(options.key, options.fetcher);
+    return Promise.resolve(cached as T);
+  }
+  return options.fetcher().then((value) => {
+    if (!value) return options.fallback;
+    if (options.writeOnFirstLoad) writeCache(options.key, value);
+    return value;
+  });
+}
+
 /**
  * 画风列表（stale-while-revalidate）。
  * 有缓存立即渲染 + 后台刷新：上架新画风后，用户下次打开小程序即见；
  * 无缓存（首装）等待网络，失败退回内置兜底。
  */
 export function loadStyles(): Promise<StyleMeta[]> {
-  const cached = peekCache<StyleMeta[]>(STORAGE_KEYS.styles);
-  if (cached?.length) {
-    revalidate(STORAGE_KEYS.styles, fetchStyles);
-    return Promise.resolve(cached);
-  }
-  return fetchStyles().then((styles) => {
-    if (!styles) return STYLE_FALLBACK;
-    writeCache(STORAGE_KEYS.styles, styles);
-    return styles;
-  });
+  return swrLoad({ key: STORAGE_KEYS.styles, fetcher: fetchStyles, fallback: STYLE_FALLBACK, writeOnFirstLoad: true });
 }
 
 /**
@@ -83,12 +103,7 @@ async function fetchModels(): Promise<ModelMeta[] | null> {
  * 缓存策略同画风：立即渲染缓存 + 后台静默刷新。
  */
 export function loadModels(): Promise<ModelMeta[]> {
-  const cached = peekCache<ModelMeta[]>(STORAGE_KEYS.models);
-  if (cached?.length) {
-    revalidate(STORAGE_KEYS.models, fetchModels);
-    return Promise.resolve(cached);
-  }
-  return fetchModels().then((models) => models ?? []);
+  return swrLoad({ key: STORAGE_KEYS.models, fetcher: fetchModels, fallback: [], writeOnFirstLoad: false });
 }
 
 /** 拉取运行期配置；失败返回 null（保持旧缓存） */
@@ -103,16 +118,7 @@ async function fetchRuntimeConfig(): Promise<RuntimeConfig | null> {
 
 /** 运行期配置（stale-while-revalidate，策略同画风） */
 export function loadRuntimeConfig(): Promise<RuntimeConfig> {
-  const cached = peekCache<RuntimeConfig>(STORAGE_KEYS.runtimeConfig);
-  if (cached) {
-    revalidate(STORAGE_KEYS.runtimeConfig, fetchRuntimeConfig);
-    return Promise.resolve(cached);
-  }
-  return fetchRuntimeConfig().then((config) => {
-    if (!config) return CONFIG_FALLBACK;
-    writeCache(STORAGE_KEYS.runtimeConfig, config);
-    return config;
-  });
+  return swrLoad({ key: STORAGE_KEYS.runtimeConfig, fetcher: fetchRuntimeConfig, fallback: CONFIG_FALLBACK, writeOnFirstLoad: true });
 }
 
 /** 生图云函数名（在微信开发者工具里部署时使用的函数名） */

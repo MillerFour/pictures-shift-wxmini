@@ -6,6 +6,7 @@ import { ALL_EXAMPLE_FILE_IDS, EXAMPLE_AFTER_FILE_IDS, EXAMPLE_ORIGINAL_FILE_ID 
 
 import { chooseImage, saveToAlbum } from '../../utils/image';
 import { ApiError, toFriendlyMessage } from '../../utils/error';
+import { formatCost } from '../../utils/format';
 import { getQuota, consumeQuota, refreshQuota } from '../../utils/quota';
 import { setTabBarHidden, syncTabBarFromPage, TAB_BAR_RPX_HEIGHT } from '../../utils/tabbar';
 import { isLoggedIn, type WxUser } from '../../utils/auth';
@@ -34,10 +35,6 @@ let exampleWarmUp: Promise<Record<string, string>> | null = null;
 function warmExampleCache(): Promise<Record<string, string>> {
   if (!exampleWarmUp) exampleWarmUp = warmCloudFileCache(ALL_EXAMPLE_FILE_IDS);
   return exampleWarmUp;
-}
-
-function formatCost(ms: number): string {
-  return ms < 1000 ? `${ms} 毫秒` : `${(ms / 1000).toFixed(1)} 秒`;
 }
 
 Page({
@@ -358,10 +355,7 @@ Page({
     this.setData({ modelId: id, modelName: picked.name });
   },
 
-  onStrengthChanging(e: { detail: { value: number } }): void {
-    this.setData({ strength: e.detail.value });
-  },
-
+  /** 拖动中（changing）与松手（change）都实时回显数值，行为一致共用一个处理函数 */
   onStrengthChange(e: { detail: { value: number } }): void {
     this.setData({ strength: e.detail.value });
   },
@@ -575,10 +569,12 @@ Page({
     this.setData({ paying: true });
     try {
       const result = await buyPackage(packageId);
+      if (!this.alive) return;
       this.setData({ showPay: false, paying: false, packages: [] });
       // 结果页返回时 onShow 的 refreshQuota 会校准本地次数
       wx.navigateTo({ url: `/pages/pay-success/pay-success?orderId=${result.outTradeNo}` });
     } catch (err) {
+      if (!this.alive) return;
       this.setData({ paying: false });
       if (err instanceof PayError && err.reason === 'CANCELLED') return; // 用户取消，不打扰
       wx.showModal({ title: '支付未完成', content: toFriendlyMessage(err), showCancel: false });

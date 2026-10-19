@@ -103,12 +103,13 @@ async function confirmDelivery(order, wxOrderId) {
       const userRaw = await transaction.collection(USERS).doc(order.openid).get();
       userDoc = userRaw && userRaw.data ? userRaw.data : userRaw;
     } catch (e) {
+      // 未建档时 doc().get() 抛错：置 null 走下方 set 补建；真故障也被幂等 set 兜住
       userDoc = null;
     }
     if (userDoc) {
       const base = typeof userDoc.quota === 'number' ? userDoc.quota : 0;
       await transaction.collection(USERS).doc(order.openid).update({
-        data: { quota: base + order.count, updatedAt: now },
+        data: { quota: base + (order.count || 0), updatedAt: now },
       });
     } else {
       await transaction.collection(USERS).doc(order.openid).set({
@@ -117,7 +118,7 @@ async function confirmDelivery(order, wxOrderId) {
           openid: order.openid,
           nickname: '',
           avatarFileID: '',
-          quota: order.count,
+          quota: order.count || 0,
           createdAt: now,
           updatedAt: now,
         },
@@ -150,6 +151,7 @@ async function applyRefund(order, refundId) {
       const userRaw = await transaction.collection(USERS).doc(order.openid).get();
       userDoc = userRaw && userRaw.data ? userRaw.data : userRaw;
     } catch (e) {
+      // 未建档时 doc().get() 抛错：无次数可回收，跳过用户侧更新即可
       userDoc = null;
     }
     if (userDoc) {

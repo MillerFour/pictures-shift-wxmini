@@ -59,6 +59,11 @@ function normalize(route: string | undefined): string {
   return (route ?? '').replace(/^\//, '');
 }
 
+/** 当前页面路由（去首斜杠）；页面栈为空返回空串 */
+export function currentRoute(): string {
+  return normalize(currentPage()?.route);
+}
+
 /** 半屏弹层打开时传 true，关闭时传 false */
 export function setTabBarHidden(next: boolean): void {
   hidden = next;

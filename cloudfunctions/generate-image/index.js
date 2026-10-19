@@ -12,8 +12,12 @@ const { ensureCollections } = require('./db-init');
 const db = cloud.database();
 const _ = db.command;
 
-/** 免费次数的单次发放额度（注册赠送 / 平台活动派发；与 free-quota 云函数的 FREE_QUOTA 保持一致） */
-const FREE_QUOTA = Number(process.env.FREE_QUOTA) || 1;
+/**
+ * 免费次数的单次发放额度（注册赠送 / 平台活动派发；与 free-quota / pay 的 FREE_QUOTA 保持一致）。
+ * 显式配置 0 = 不赠送也合法；其余非法值回落 1。
+ */
+const rawFreeQuota = Number(process.env.FREE_QUOTA);
+const FREE_QUOTA = Number.isInteger(rawFreeQuota) && rawFreeQuota >= 0 ? rawFreeQuota : 1;
 
 function ok(data) {
   return { code: 0, message: 'ok', data };
@@ -101,14 +105,14 @@ exports.main = async (event) => {
     const { fileID, styleId, strength, modelId, taskStamp } = event;
     const openid = cloud.getWXContext().OPENID || '';
     if (!openid) return fail(40100, '请先登录');
-    if (!fileID || typeof fileID !== 'string') return fail(400, '缺少原图 fileID');
-    if (!styleId || typeof styleId !== 'string') return fail(400, '缺少风格 id');
+    if (!fileID || typeof fileID !== 'string') return fail(40000, '缺少原图 fileID');
+    if (!styleId || typeof styleId !== 'string') return fail(40000, '缺少风格 id');
     const style = await findStyle(styleId);
-    if (!style) return fail(404, `风格 ${styleId} 不存在`);
+    if (!style) return fail(40400, `风格 ${styleId} 不存在`);
     // modelId 校验 models 集合真源：传入的必须已上架且引擎密钥就绪（防伪造参数白扣次数）；
     // 缺省取目录默认项（default: true），解析结果传给 generate 复用，档案记录实际使用的模型
     const model = await findModel(modelId);
-    if (modelId && !model) return fail(400, `模型 ${modelId} 不可用`);
+    if (modelId && !model) return fail(40000, `模型 ${modelId} 不可用`);
 
     // 参数校验通过后才扣次数；生成失败会返还，不让用户为失败买单
     const quotaErr = await consumeQuota(openid);
@@ -117,7 +121,8 @@ exports.main = async (event) => {
     const stamp = normalizeTaskStamp(taskStamp);
     let result;
     try {
-      result = await generate(fileID, styleId, strength, model, { openid, stamp });
+      // style 已在本入口解析，直接传入复用，convert 内不再重复查库
+      result = await generate(fileID, style, strength, model, { openid, stamp });
     } catch (err) {
       // 生成失败返还次数，不让用户为失败买单
       await refundQuota(openid);
@@ -157,6 +162,6 @@ exports.main = async (event) => {
     return ok({ resultFileID: result.resultFileID, resultUrl, costMs: result.costMs });
   } catch (err) {
     console.error('[generate-image] 出图失败', err);
-    return fail(500, err instanceof Error ? err.message : '生图失败');
+    return fail(50000, err instanceof Error ? err.message : '生图失败');
   }
 };

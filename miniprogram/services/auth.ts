@@ -32,11 +32,6 @@ export async function checkUser(): Promise<CheckResult> {
 }
 
 /**
- * 真实登录（建档）：调用云函数 login action。
- *
- * 仅用于首次注册——云端用 openid 把昵称/头像 upsert 进 users 集合（openid 即 _id，天然唯一）。
- */
-/**
  * 登录成功后预创建任务目录：上传 task/{openid}/.keep 占位文件，
  * 让云存储在用户登录后立即出现其任务文件夹（正式原/成图按任务时间戳随后落入）。
  * 失败静默：占位只影响控制台可见性，首次生成时目录仍会自动产生。
@@ -51,6 +46,11 @@ async function ensureTaskFolder(openid: string): Promise<void> {
   }
 }
 
+/**
+ * 真实登录（建档）：调用云函数 login action。
+ *
+ * 仅用于首次注册——云端用 openid 把昵称/头像 upsert 进 users 集合（openid 即 _id，天然唯一）。
+ */
 export async function login(profile: LoginProfile): Promise<LoginResult> {
   const result = await callFunction<LoginResult>('login', profile, CLOUD_FUNCTIONS.identity);
   // 及时生成用户任务目录（后台执行，不阻塞登录返回）

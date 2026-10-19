@@ -1,7 +1,6 @@
 'use strict';
 const cloud = require('wx-server-sdk');
 const { config } = require('./config');
-const { findStyle } = require('./catalog');
 const { ProviderError } = require('./providers/types');
 const { createProvider } = require('./providers');
 
@@ -41,22 +40,23 @@ async function resolveSourceUrl(fileID) {
  * 同步出图：一次调用内完成「下载原图 → 调厂商 → 上传结果到云存储」，
  * 直接返回结果图的 fileID 与耗时，不再走异步任务表。
  *
+ * style（styles 集合真源）与 model（models 集合真源）均由入口解析后传入；
+ * model 为 null 时回退 STYLE_PROVIDER 默认引擎。
  * 任务落盘：task/{openid}/{stamp}_result.{ext}，与原图
  * task/{openid}/{stamp}_original.{ext} 共用时间戳前缀配对成任务。
- * model 由入口解析后传入（models 集合真源）；为 null 时回退 STYLE_PROVIDER 默认引擎。
  */
-async function generate(originalFileID, styleId, strength, model, task) {
+async function generate(originalFileID, style, strength, model, task) {
   const startedAt = Date.now();
-  // 画风参数来自 styles 集合真源（控制台改文档即生效）；不存在/已下架直接失败
-  const style = await findStyle(styleId);
-  if (!style) throw new Error(`风格 ${styleId} 不存在`);
-
   const source = await downloadSource(originalFileID);
   const contentType = detectImageType(source.bytes);
   if (!contentType) throw new Error('只支持 JPG / PNG / WebP 图片');
 
   const provider = model ? createProvider(model.provider, model) : createProvider();
-  const sourceUrl = await resolveSourceUrl(originalFileID);
+  // 仅「必须用公网 URL 取原图」的厂商才换直链：dashscope 恒需要，tokenhub 仅在
+  // TOKENHUB_IMAGE_INPUT=url 时需要；其余厂商 base64 直传，省一次 getTempFileURL
+  const needsPublicSource =
+    provider.name === 'dashscope' || (provider.name === 'tokenhub' && config.tokenhub.imageInput !== 'base64');
+  const sourceUrl = needsPublicSource ? await resolveSourceUrl(originalFileID) : '';
   const input = { style, strength: Number(strength) || 60, source, publicSourceUrl: sourceUrl };
 
   let state = await provider.submit(input);

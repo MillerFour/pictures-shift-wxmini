@@ -20,6 +20,10 @@ async function ensureQuota(openid, freeQuota) {
     await db.collection('users').doc(openid).update({ data: { quota: freeQuota, updatedAt: Date.now() } });
     return freeQuota;
   } catch (e) {
+    // doc().get() 对不存在的文档会抛错（errCode -502005），那是「未建档」的正常路径；
+    // 其余异常（网络 / 权限）不能静默成未登录 —— 打日志留痕再按未建档处理
+    const notExist = e && (e.errCode === -502005 || /not exist/i.test(e.message || ''));
+    if (!notExist) console.error('[quota] ensureQuota 查询异常（按未建档处理）', e);
     return null;
   }
 }

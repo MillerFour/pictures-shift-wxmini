@@ -1,34 +1,17 @@
 'use strict';
-const { ProviderError, downloadImage, readVendorError, httpJson } = require('./types');
+const { ProviderError, downloadImage, readVendorError, makeJsonCaller } = require('./types');
 
 const TERMINAL_FAILED = new Set(['FAILED', 'CANCELED', 'UNKNOWN']);
 const TERMINAL_OK = new Set(['SUCCEEDED', 'SUCCESS']);
 
 function createDashScopeProvider(cfg) {
+  const call = makeJsonCaller('dashscope', '百炼');
   const headers = {
     Authorization: `Bearer ${cfg.apiKey}`,
     'Content-Type': 'application/json',
     /** 百炼异步任务必须带这个头，否则同步返回会不符合预期 */
     'X-DashScope-Async': 'enable',
   };
-
-  async function call(url, init) {
-    let res;
-    try {
-      res = await httpJson(url, init);
-    } catch (e) {
-      throw new ProviderError('dashscope', `请求百炼失败：${e.message}`);
-    }
-    const { status: resStatus, text } = res;
-    let payload;
-    try {
-      payload = text ? JSON.parse(text) : {};
-    } catch {
-      throw new ProviderError('dashscope', `百炼返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
-    }
-    if (resStatus < 200 || resStatus >= 300) throw new ProviderError('dashscope', readVendorError(payload) || `百炼返回 HTTP ${resStatus}`);
-    return payload;
-  }
 
   async function toSuccess(payload) {
     const output = payload.output;

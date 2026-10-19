@@ -144,7 +144,7 @@
               activeColor="#c1502e"
               backgroundColor="#e2dfd8"
               block-color="#ffffff"
-              bindchanging="onStrengthChanging"
+              bindchanging="onStrengthChange"
               bindchange="onStrengthChange"
             />
             <view class="row block-scale">

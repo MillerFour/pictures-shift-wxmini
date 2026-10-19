@@ -11,33 +11,11 @@
  */
 export const CLOUD_ENV = 'piture-shift-d9gy1p5tnf310cf3f';
 
-function envVersion(): 'develop' | 'trial' | 'release' {
-  try {
-    // getAccountInfoSync 在旧基础库上不存在，必须 try 兜底
-    return wx.getAccountInfoSync().miniProgram.envVersion;
-  } catch {
-    return 'release';
-  }
-}
-
+/**
+ * 图片处理参数（上传原图的本地压缩，与云函数/厂商无关）。
+ * 旧直连后端架构的请求/轮询参数已随架构废弃删除。
+ */
 export const ENV = {
-  ENV_VERSION: envVersion(),
-
-  /** 单次 wx.request 超时。只覆盖「提交」和「单次轮询」，出图耗时靠轮询 */
-  REQUEST_TIMEOUT: 15000,
-
-  /** 上传原图超时。手机大图 + 弱网要给足 */
-  UPLOAD_TIMEOUT: 60000,
-
-  /** 轮询间隔（毫秒） */
-  POLL_INTERVAL: 2000,
-
-  /**
-   * 轮询最大次数。2000ms × 120 ≈ 4 分钟。
-   * 必须设上限：弱网下无上限轮询会让 loading 一直挂着，也会持续打后端。
-   */
-  POLL_MAX_ATTEMPTS: 120,
-
   /** 原图压缩后的长边像素，再大只会拖慢上传，对风格化结果无收益 */
   MAX_LONG_EDGE: 1280,
 

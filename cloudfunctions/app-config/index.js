@@ -35,15 +35,21 @@ function runtimeConfig() {
 
 exports.main = async (event) => {
   const rid = requestId();
-  // styles 集合懒创建 + 首次播种（实例内只做一次检查）
-  await ensureCollections(['styles']);
-  if (!event || !event.action) return ok({ skipped: true }, rid);
-  switch (event.action) {
-    case 'config':
-      return ok(runtimeConfig(), rid);
-    case 'styles':
-      return ok(await listStyleMeta(), rid);
-    default:
-      return fail(ErrorCode.BAD_REQUEST, `未知 action：${event.action}`, rid);
+  try {
+    // styles 集合懒创建 + 首次播种（实例内只做一次检查）；放主流程内，
+    // 数据库抖动时返回统一错误信封，而不是云平台的裸异常
+    await ensureCollections(['styles']);
+    if (!event || !event.action) return ok({ skipped: true }, rid);
+    switch (event.action) {
+      case 'config':
+        return ok(runtimeConfig(), rid);
+      case 'styles':
+        return ok(await listStyleMeta(), rid);
+      default:
+        return fail(ErrorCode.BAD_REQUEST, `未知 action：${event.action}`, rid);
+    }
+  } catch (err) {
+    console.error('[app-config] 处理失败', err);
+    return fail(ErrorCode.INTERNAL, '服务暂时不可用，请稍后重试', rid);
   }
 };

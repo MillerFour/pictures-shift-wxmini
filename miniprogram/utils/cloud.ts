@@ -1,7 +1,7 @@
 /**
  * 微信云开发调用封装。
  *
- * 替代原来直连 Hono BFF 的 wx.request：接口走 wx.cloud.callFunction，
+ * 替代旧的 wx.request 直连方案：接口走 wx.cloud.callFunction，
  * 原图走 wx.cloud.uploadFile（云存储），结果图走 wx.cloud.getTempFileURL。
  * 不再依赖任何自有域名 / 服务器。
  *
@@ -41,7 +41,7 @@ export const CLOUD_FUNCTIONS = {
   generate: 'generate-image',
 } as const;
 
-/** 封装一次云函数调用。云函数统一返回 ApiEnvelope，这里透出 data 或抛错。 */
+/** 封装一次云函数调用。云函数统一返回信封结构（code/message/data），这里透出 data 或抛错。 */
 export function callFunction<T = unknown>(
   action: string,
   data: Record<string, unknown> = {},
@@ -205,29 +205,4 @@ export function uploadAvatar(filePath: string): Promise<string> {
  */
 export function resolveAvatar(fileID: string): Promise<string> {
   return resolveTempUrl(fileID);
-}
-
-/**
- * 上传用户照片到云存储，返回 fileID。
- * 按 openid 隔离目录，便于「我的照片」等场景按用户管理；
- * 展示时配合 resolveTempUrl(fileID) 换临时直链渲染。
- */
-export function uploadUserPhoto(
-  filePath: string,
-  openid?: string,
-  onProgress?: (percent: number) => void,
-): Promise<string> {
-  const ext = (filePath.split('.').pop() || 'jpg').toLowerCase();
-  const dir = openid ? `user-photos/${openid}` : 'user-photos/anon';
-  const cloudPath = `${dir}/${Date.now()}-${Math.floor(Math.random() * 1e6)}.${ext}`;
-  return new Promise<string>((resolve, reject) => {
-    wx.cloud
-      .uploadFile({
-        cloudPath,
-        filePath,
-        onProgressUpdate: onProgress ? (e: { progress: number }) => onProgress(e.progress) : undefined,
-      } as WechatMiniprogram.Cloud.UploadFileOption)
-      .then((res) => resolve(res.fileID))
-      .catch((err: unknown) => reject(toError(err)));
-  });
 }

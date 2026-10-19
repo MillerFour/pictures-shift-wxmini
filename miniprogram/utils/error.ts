@@ -13,7 +13,6 @@ export class ApiError extends Error {
 export const TRANSPORT_CODES = {
   TIMEOUT: 'TIMEOUT',
   NETWORK: 'NETWORK',
-  BAD_RESPONSE: 'BAD_RESPONSE',
 } as const;
 
 export function toFriendlyMessage(err: unknown, fallback = '出了点问题，请稍后重试'): string {

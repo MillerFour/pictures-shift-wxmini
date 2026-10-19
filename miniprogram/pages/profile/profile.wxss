@@ -52,7 +52,6 @@
 .block { margin-top: 48rpx; }
 .block-head { margin-bottom: 20rpx; }
 
-.empty { padding: 40rpx 32rpx; }
 
 .menu { overflow: hidden; }
 .menu-item {

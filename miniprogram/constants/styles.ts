@@ -3,7 +3,7 @@ import { RuntimeConfig, StyleMeta } from '../types';
 /**
  * 风格的本地兜底数据。
  *
- * 正常路径是启动时从 BFF 拉取（新增风格、改文案不用等发版），
+ * 正常路径是启动时从云端拉取（新增风格、改文案不用等发版），
  * 这里只保证接口不可用时页面不至于空白。
  *
  * swatch 选的是低饱和的自然色（苔绿 / 藕荷 / 灰蓝 / 棕褐），
@@ -16,7 +16,7 @@ export const STYLE_FALLBACK: StyleMeta[] = [
   { id: 'film', name: '复古胶片', subtitle: '胶片颗粒 · 褪色暖调', swatch: '#8b7455' },
 ];
 
-/** BFF 不可达时的运行期配置兜底 */
+/** 云端不可达时的运行期配置兜底 */
 export const CONFIG_FALLBACK: RuntimeConfig = {
   maxFileSizeMB: 8,
   recommendedLongEdge: 1280,

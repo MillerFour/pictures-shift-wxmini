@@ -57,15 +57,6 @@ function buildPayData({ xpay, sessionKey, productId, goodsPrice, outTradeNo, att
   };
 }
 
-/** 推送/服务端接口通用验签（发货推送 pay_sig 校验也走这里） */
-function verifyPaySig(xpay, uri, postBody, paySig) {
-  if (!xpay.appKey || !paySig) return false;
-  const expected = hmacHex(`${uri}&${postBody}`, xpay.appKey);
-  const a = Buffer.from(expected);
-  const b = Buffer.from(String(paySig));
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
-}
-
 /**
  * 小程序全局接口调用凭证（stable_token）。
  *
@@ -150,4 +141,4 @@ function isPaidStatus(status) {
   return status === 'SUCCESS' || status === 'PAID' || status === 'PAY_SUCCESS';
 }
 
-module.exports = { buildPayData, verifyPaySig, getAccessToken, code2Session, queryOrder, isConfigured, isPaidStatus };
+module.exports = { buildPayData, getAccessToken, code2Session, queryOrder, isConfigured, isPaidStatus };

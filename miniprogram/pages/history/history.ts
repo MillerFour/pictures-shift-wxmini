@@ -2,6 +2,7 @@ import { fetchTasks } from '../../services/api';
 import { resolveTempUrls } from '../../utils/cloud';
 import { saveToAlbum } from '../../utils/image';
 import { toFriendlyMessage } from '../../utils/error';
+import { formatCost, formatTime } from '../../utils/format';
 import type { TaskRecord } from '../../types';
 
 /**
@@ -25,21 +26,6 @@ interface HistoryItem {
   saving: boolean;
 }
 
-function formatTime(ts: number): string {
-  if (!ts) return '';
-  const d = new Date(ts);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const now = new Date();
-  const sameYear = d.getFullYear() === now.getFullYear();
-  const md = `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  return sameYear ? md : `${d.getFullYear()}年${md}`;
-}
-
-function formatCost(ms: number): string {
-  if (!ms) return '';
-  return ms < 1000 ? `${ms} 毫秒` : `${(ms / 1000).toFixed(1)} 秒`;
-}
-
 Page({
   data: {
     items: [] as HistoryItem[],
@@ -47,12 +33,20 @@ Page({
     hasMore: true,
   },
 
+  /** 分页请求是异步的，页面可能中途退出；卸载后 setData 会抛错，异步回调先判断 */
+  alive: true,
+
   /** 游标：已加载条数，作为下一页 skip */
   skip: 0,
   loadingMore: false,
 
   onLoad() {
+    this.alive = true;
     void this.reload();
+  },
+
+  onUnload() {
+    this.alive = false;
   },
 
   onPullDownRefresh() {
@@ -68,12 +62,16 @@ Page({
     this.setData({ loading: true });
     try {
       const list = await fetchTasks(PAGE_SIZE, 0);
+      if (!this.alive) return;
       const items = await this.decorate(list);
+      if (!this.alive) return;
       this.skip = list.length;
       this.setData({ items, hasMore: list.length >= PAGE_SIZE, loading: false });
     } catch (err) {
-      this.setData({ loading: false });
-      wx.showToast({ title: toFriendlyMessage(err, '加载失败'), icon: 'none' });
+      if (this.alive) {
+        this.setData({ loading: false });
+        wx.showToast({ title: toFriendlyMessage(err, '加载失败'), icon: 'none' });
+      }
     }
   },
 
@@ -82,14 +80,16 @@ Page({
     this.loadingMore = true;
     try {
       const list = await fetchTasks(PAGE_SIZE, this.skip);
+      if (!this.alive) return;
       const decorated = await this.decorate(list);
+      if (!this.alive) return;
       this.skip += list.length;
       this.setData({
         items: this.data.items.concat(decorated),
         hasMore: list.length >= PAGE_SIZE,
       });
     } catch (err) {
-      wx.showToast({ title: toFriendlyMessage(err, '加载失败'), icon: 'none' });
+      if (this.alive) wx.showToast({ title: toFriendlyMessage(err, '加载失败'), icon: 'none' });
     } finally {
       this.loadingMore = false;
     }

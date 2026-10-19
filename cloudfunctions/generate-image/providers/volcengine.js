@@ -1,6 +1,6 @@
 'use strict';
 const { guidanceOf } = require('../catalog');
-const { ProviderError, downloadImage, readVendorError, toDataUri, httpJson } = require('./types');
+const { ProviderError, downloadImage, readVendorError, toDataUri, makeJsonCaller } = require('./types');
 
 /**
  * Seedream（方舟 images/generations）请求体。
@@ -26,32 +26,14 @@ function buildRequest(input, cfg) {
 }
 
 function createVolcengineProvider(cfg) {
+  const call = makeJsonCaller('volcengine', '方舟');
   const headers = {
     Authorization: `Bearer ${cfg.apiKey}`,
     'Content-Type': 'application/json',
   };
 
-  async function call(url, init) {
-    let res;
-    try {
-      res = await httpJson(url, { method: init.method || 'POST', headers: init.headers, body: init.body });
-    } catch (e) {
-      throw new ProviderError('volcengine', `请求方舟失败：${e.message}`);
-    }
-    const { status: resStatus, text } = res;
-    let payload;
-    try {
-      payload = text ? JSON.parse(text) : {};
-    } catch {
-      throw new ProviderError('volcengine', `方舟返回非 JSON（HTTP ${resStatus}）：${text.slice(0, 200)}`);
-    }
-    if (resStatus < 200 || resStatus >= 300) {
-      throw new ProviderError('volcengine', readVendorError(payload) || `方舟返回 HTTP ${resStatus}`);
-    }
-    return payload;
-  }
-
-  function toSuccess(payload) {
+  /** submit 与 poll 共用的结果提取：优先内联 b64（省一次下载），厂商只回 url 时兜底下载 */
+  async function resolveImage(payload) {
     const item = payload.data && payload.data[0];
     if (item && item.b64_json) {
       return {
@@ -59,11 +41,8 @@ function createVolcengineProvider(cfg) {
         image: { bytes: Buffer.from(item.b64_json, 'base64'), contentType: 'image/jpeg' },
       };
     }
-    return null;
-  }
-
-  function toPending(payload) {
-    if (payload.id) return { state: 'RUNNING', vendorTaskId: payload.id };
+    const url = item && item.url;
+    if (url) return { state: 'SUCCEEDED', image: await downloadImage(url) };
     return null;
   }
 
@@ -76,21 +55,16 @@ function createVolcengineProvider(cfg) {
         body: JSON.stringify(buildRequest(input, cfg)),
       });
       if (payload.error && payload.error.message) throw new ProviderError('volcengine', payload.error.message);
-      const inline = toSuccess(payload);
-      if (inline) return inline;
-      const url = payload.data && payload.data[0] && payload.data[0].url;
-      if (url) return { state: 'SUCCEEDED', image: await downloadImage(url) };
-      const pending = toPending(payload);
-      if (pending) return pending;
+      const image = await resolveImage(payload);
+      if (image) return image;
+      if (payload.id) return { state: 'RUNNING', vendorTaskId: payload.id };
       throw new ProviderError('volcengine', readVendorError(payload) || '响应里既没有图片也没有任务 id');
     },
     async poll(vendorTaskId) {
       const payload = await call(`${cfg.baseUrl}/api/v3/images/${vendorTaskId}`, { headers });
       if (payload.error && payload.error.message) throw new ProviderError('volcengine', payload.error.message);
-      const inline = toSuccess(payload);
-      if (inline) return inline;
-      const url = payload.data && payload.data[0] && payload.data[0].url;
-      if (url) return { state: 'SUCCEEDED', image: await downloadImage(url) };
+      const image = await resolveImage(payload);
+      if (image) return image;
       return { state: 'RUNNING', vendorTaskId };
     },
   };

@@ -79,7 +79,7 @@
 .card.compact .name {
   font-size: 27rpx;
   font-weight: 500;
-  /* 画风名由 BFF 下发，长度不可控：宁可省略也不折行，否则一行芯片高矮不齐 */
+  /* 画风名由云端下发，长度不可控：宁可省略也不折行，否则一行芯片高矮不齐 */
   max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
