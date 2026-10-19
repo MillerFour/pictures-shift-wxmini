@@ -16,18 +16,6 @@ function num(key, fallback) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-function parseIndexMap(raw) {
-  const map = {};
-  for (const pair of String(raw).split(',')) {
-    const eq = pair.indexOf('=');
-    if (eq < 0) continue;
-    const id = pair.slice(0, eq).trim();
-    const n = Number(pair.slice(eq + 1).trim());
-    if (id && Number.isFinite(n)) map[id] = n;
-  }
-  return map;
-}
-
 const config = {
   /** 引擎选择。mock 不需要密钥，原样返回上传的图，用来先跑通小程序全流程 */
   provider: str('STYLE_PROVIDER', 'hunyuan'),
@@ -54,13 +42,6 @@ const config = {
     baseUrl: str('TOKENHUB_BASE_URL', 'https://tokenhub.tencentmaas.com/v1').replace(/\/+$/, ''),
     model: str('TOKENHUB_IMAGE_MODEL', 'hy-image-v3.5-preview'),
     imageInput: str('TOKENHUB_IMAGE_INPUT', 'base64'),
-  },
-
-  dashscope: {
-    apiKey: str('DASHSCOPE_API_KEY'),
-    baseUrl: str('DASHSCOPE_BASE_URL', 'https://dashscope.aliyuncs.com').replace(/\/+$/, ''),
-    model: str('DASHSCOPE_MODEL', 'wanx-style-repaint-v1'),
-    styleIndex: parseIndexMap(str('DASHSCOPE_STYLE_INDEX_MAP')),
   },
 
   /** 腾讯云开发原生混元图生图（走 cloud.ai()，免 API Key） */

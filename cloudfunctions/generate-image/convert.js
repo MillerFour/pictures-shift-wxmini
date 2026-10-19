@@ -26,7 +26,7 @@ async function downloadSource(fileID) {
   return { bytes: Buffer.from(res.fileContent), contentType: res.contentType || 'image/jpeg' };
 }
 
-/** 给「只能用公网 URL 取图」的厂商（如百炼）生成原图临时公网地址 */
+/** 给「只能用公网 URL 取图」的厂商（tokenhub 走 url 取图模式时）生成原图临时公网地址 */
 async function resolveSourceUrl(fileID) {
   try {
     const res = await cloud.getTempFileURL({ fileList: [fileID] });
@@ -52,10 +52,9 @@ async function generate(originalFileID, style, strength, model, task) {
   if (!contentType) throw new Error('只支持 JPG / PNG / WebP 图片');
 
   const provider = model ? createProvider(model.provider, model) : createProvider();
-  // 仅「必须用公网 URL 取原图」的厂商才换直链：dashscope 恒需要，tokenhub 仅在
-  // TOKENHUB_IMAGE_INPUT=url 时需要；其余厂商 base64 直传，省一次 getTempFileURL
-  const needsPublicSource =
-    provider.name === 'dashscope' || (provider.name === 'tokenhub' && config.tokenhub.imageInput !== 'base64');
+  // 仅 tokenhub 的 url 取图模式（TOKENHUB_IMAGE_INPUT=url）需要公网直链；
+  // 其余厂商 base64 直传，省一次 getTempFileURL
+  const needsPublicSource = provider.name === 'tokenhub' && config.tokenhub.imageInput !== 'base64';
   const sourceUrl = needsPublicSource ? await resolveSourceUrl(originalFileID) : '';
   const input = { style, strength: Number(strength) || 60, source, publicSourceUrl: sourceUrl };
 

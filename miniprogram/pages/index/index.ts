@@ -50,6 +50,9 @@ Page({
     exampleOriginal: '',
     exampleAfter: '',
 
+    /** 第二步画风卡片的示例图（styleId -> 本地缓存路径），与对比滑块同一批素材 */
+    previews: {} as Record<string, string>,
+
     styles: [] as StyleMeta[],
     styleId: FALLBACK_STYLE.id,
     styleName: FALLBACK_STYLE.name,
@@ -263,6 +266,30 @@ Page({
     });
   },
 
+  /**
+   * 各画风的示例图路径（第二步「挑一个画风」卡片用），与首页对比滑块同源
+   * （example/{id}.jpg，共用原图生成）。本地缓存命中的立即渲染；
+   * 未命中的等 onLoad 发起的预热批次完成后补渲染（与 refreshExample 同一套路）。
+   * 云端新增画风还没配示例图时，映射里没有该 id，卡片自动退回色块展示。
+   */
+  refreshPreviews(): void {
+    const build = (warm: Record<string, string>): Record<string, string> => {
+      const map: Record<string, string> = {};
+      for (const s of this.data.styles) {
+        const fileID = EXAMPLE_AFTER_FILE_IDS[s.id];
+        if (!fileID) continue;
+        const local = hasCachedCloudFile(fileID) ? cloudFileLocalPath(fileID) : warm[fileID] || '';
+        if (local) map[s.id] = local;
+      }
+      return map;
+    };
+    this.setData({ previews: build({}) });
+    void warmExampleCache().then((warm) => {
+      if (!this.alive) return;
+      this.setData({ previews: build(warm) });
+    });
+  },
+
   /** 拉风格、模型与运行期配置；失败退回内置数据或隐藏对应选择器，不打断用户 */
   async hydrate(): Promise<void> {
     const [styles, config, models] = await Promise.allSettled([loadStyles(), loadRuntimeConfig(), loadModels()]);
@@ -272,9 +299,11 @@ Page({
       // 默认选中一个，用户一进第二屏就有可提交的选择，不用先点一下
       const list = styles.value;
       this.setData({ styles: list });
+      this.refreshPreviews();
       this.syncSelection(list.find((s) => s.id === this.data.styleId)?.id ?? list[0].id);
     } else {
       this.setData({ styles: STYLE_FALLBACK });
+      this.refreshPreviews();
     }
 
     // 模型列表：默认选中第一个（服务端目录顺序即推荐顺序），空列表隐藏选择器

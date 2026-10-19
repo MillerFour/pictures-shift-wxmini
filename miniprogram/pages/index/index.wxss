@@ -374,12 +374,13 @@
 
 /* ---------- 示例 ---------- */
 
-/* 示例素材占位：云端素材未配置（或直链未就绪）时替代对比滑块的位置 */
+/* 示例素材占位：云端素材未配置（或直链未就绪）时替代对比滑块的位置。
+   高度对齐 4:3 滑块（约 500rpx），保证兜底态与正常态一样装进一屏 */
 .example-empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 600rpx;
+  height: 500rpx;
   border-radius: 24rpx;
   background: #f5f5f5;
 }

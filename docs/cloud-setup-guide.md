@@ -79,8 +79,8 @@ wx-identity → app-config → free-quota → pay → records → generate-image
 | `wx-identity` | `USERS_COLLECTION`（可选） | 档案集合名，默认 `users` |
 | `app-config` | `MAX_FILE_SIZE_MB`、`RECOMMENDED_LONG_EDGE`、`NOTICE` | 建议值 8 / 1280 / 运营公告文案 |
 | `free-quota` | `FREE_QUOTA` | 免费次数单次发放额度，默认 1 |
-| `generate-image` | `FREE_QUOTA`、`STYLE_PROVIDER` | 次数额度；引擎：`hunyuan`（默认，免密钥）/ `volcengine` / `tokenhub` / `dashscope` |
-| `generate-image` | 按 `STYLE_PROVIDER` 配对应密钥 | hunyuan 免；volcengine: `VOLCENGINE_API_KEY`；tokenhub: `TOKENHUB_API_KEY`；dashscope: `DASHSCOPE_API_KEY` |
+| `generate-image` | `FREE_QUOTA`、`STYLE_PROVIDER` | 次数额度；引擎：`hunyuan`（默认，免密钥）/ `volcengine` / `tokenhub` |
+| `generate-image` | 按 `STYLE_PROVIDER` 配对应密钥 | hunyuan 免；volcengine: `VOLCENGINE_API_KEY`；tokenhub: `TOKENHUB_API_KEY` |
 | `pay` | `XPAY_OFFER_ID`、`XPAY_APP_KEY`、`WX_APPID`、`WX_APPSECRET`、`XPAY_ENV` | 虚拟支付四件套 + 环境（0 现网 / 1 沙箱） |
 | `pay` | `NEED_PAY`、`PAY_AMOUNT`、`XPAY_TEST_PRODUCT_ID`、`XPAY_PRODUCTS`、`XPAY_SWEEP_DELAY_MS`、`FREE_QUOTA` | `NEED_PAY=false` 为演示模式（模拟发货，无需密钥） |
 | `xpayNotify` | `XPAY_APP_KEY`、`XPAY_NOTIFY_PATH` | 与 pay 的 AppKey 一致；路径默认 `/xpay-notify` |
@@ -144,7 +144,7 @@ wx-identity → app-config → free-quota → pay → records → generate-image
 |---|---|---|---|
 | `_id` | string | ✅ | 模型 id（前端生图传它），英文小写 |
 | `name` | string | ✅ | 展示名 |
-| `provider` | string | ✅ | 引擎路由：`hunyuan` / `volcengine` / `tokenhub` / `dashscope` |
+| `provider` | string | ✅ | 引擎路由：`hunyuan` / `volcengine` / `tokenhub` |
 | `model` | string | 可选 | 厂商模型名；缺省取该引擎的环境变量默认值 |
 | `size` | string | 可选 | 出图尺寸（如 `1K` / `2K`）；缺省取引擎环境变量 |
 | `guidance` | boolean | 可选 | `true` = 支持 guidance_scale，画风强度滑块生效（缺省不支持） |
@@ -154,7 +154,7 @@ wx-identity → app-config → free-quota → pay → records → generate-image
 | `sort` | number | 可选 | 越小越靠前；不写排最后 |
 | `createdAt` / `updatedAt` | number | 建议 | 毫秒时间戳 |
 
-**初始化数据**（复制下方 5 行保存为 `models.json` 后走「导入」，或用「添加记录」一次粘一行；hunyuan / tokenhub / dashscope 省略 `model` 即取环境变量默认）：
+**初始化数据**（复制下方 4 行保存为 `models.json` 后走「导入」，或用「添加记录」一次粘一行；hunyuan / tokenhub 省略 `model` 即取环境变量默认）：
 
 ```jsonl
 {"_id":"seedream-4","name":"Seedream 4.0","provider":"volcengine","model":"doubao-seedream-4-0-20260415","size":"1K","desc":"出图快 · 性价比高","guidance":true,"default":true,"enabled":true,"sort":1,"createdAt":1760000000000,"updatedAt":1760000000000}

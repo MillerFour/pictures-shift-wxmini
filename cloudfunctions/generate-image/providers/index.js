@@ -1,6 +1,5 @@
 'use strict';
 const { config } = require('../config');
-const { createDashScopeProvider } = require('./dashscope');
 const { createHunyuanProvider } = require('./hunyuan');
 const { createMockProvider } = require('./mock');
 const { createTokenHubProvider } = require('./tokenhub');
@@ -43,15 +42,6 @@ function createProvider(name = config.provider, override = {}) {
     case 'hunyuan':
       // CloudBase 原生混元生图：无需 API Key，走云环境鉴权
       return createHunyuanProvider({ model: override.model || config.hunyuan.model });
-
-    case 'dashscope':
-      if (!config.dashscope.apiKey) throw new ProviderError(name, '缺少 DASHSCOPE_API_KEY');
-      return createDashScopeProvider({
-        apiKey: config.dashscope.apiKey,
-        baseUrl: config.dashscope.baseUrl,
-        model: override.model || config.dashscope.model,
-        styleIndex: { ...config.dashscope.styleIndex },
-      });
 
     default:
       throw new ProviderError(String(name), `未知的 STYLE_PROVIDER：${name}`);

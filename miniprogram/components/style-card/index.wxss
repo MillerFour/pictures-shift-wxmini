@@ -21,11 +21,25 @@
  * 未选中时为中性占位块（浅暖灰），避免「四种颜色同时在场」
  * 破坏全局「一次只出现一个强调色」的原则；
  * 仅选中态由 wxml 内联注入该风格色。画风之间的区分靠选中着色，不靠装饰。
+ *
+ * 4:3 比例（与首页对比滑块同构）：有示例图时完整呈现画风特征，
+ * 没图时只是一块更从容的色板。
  */
 .swatch {
-  height: 168rpx;
+  position: relative;
+  height: 0;
+  padding-bottom: 75%;
   background: var(--surface-2);
   transition: background 0.15s ease;
+}
+
+/* 示例图铺满色块：图片即画风预览，色块退化为加载中的底色 */
+.swatch-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
 }
 
 .meta {
@@ -66,12 +80,7 @@
   border-radius: var(--r-md);
 }
 
-/* 密度档：仍是两列卡片，仅缩短色块 + 收紧内边距，用于第二步降低高度占用。
-   选色预览与名称/副标题都保留，只是整体更扁。 */
-.card.dense .swatch {
-  height: 116rpx;
-}
-
+/* 密度档：收紧内边距，用于第二步降低高度占用。选色预览与名称/副标题都保留。 */
 .card.dense .meta {
   padding: 16rpx 20rpx 18rpx;
 }

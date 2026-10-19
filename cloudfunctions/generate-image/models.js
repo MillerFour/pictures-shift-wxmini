@@ -16,7 +16,7 @@ const _ = db.command;
  * 前端隐藏选择器，generate 回退到 STYLE_PROVIDER 默认引擎。
  *
  * 字段约定：
- * - provider：引擎路由（hunyuan / volcengine / tokenhub / dashscope）
+ * - provider：引擎路由（hunyuan / volcengine / tokenhub）
  * - model / size：厂商模型名与出图尺寸，缺省取该引擎的环境变量默认值
  * - guidance：true = 该模型支持 guidance_scale（画风强度滑块生效）
  * - default：true = 未选模型时的缺省回退项（建议整个目录只有一个）
@@ -61,13 +61,6 @@ const BUILT_IN_MODELS = [
     model: config.tokenhub.model,
     desc: 'TokenHub 通道',
   },
-  {
-    id: 'wanx-repaint',
-    name: '通义万相',
-    provider: 'dashscope',
-    model: config.dashscope.model,
-    desc: '阿里百炼风格重绘',
-  },
 ];
 
 /** provider 的密钥/环境是否就绪，决定该模型是否对外可见 */
@@ -77,8 +70,6 @@ function providerReady(provider) {
       return Boolean(config.volcengine.apiKey);
     case 'tokenhub':
       return Boolean(config.tokenhub.apiKey);
-    case 'dashscope':
-      return Boolean(config.dashscope.apiKey);
     case 'hunyuan':
     case 'mock':
       return true;
@@ -92,7 +83,6 @@ function withDefaults(doc) {
   const defaults = {
     volcengine: { model: config.volcengine.model, size: config.volcengine.size },
     tokenhub: { model: config.tokenhub.model },
-    dashscope: { model: config.dashscope.model },
     hunyuan: { model: config.hunyuan.model },
   }[doc.provider] || {};
   return {

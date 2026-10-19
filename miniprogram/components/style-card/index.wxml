@@ -3,7 +3,9 @@
     <text class="name">{{styleItem.name}}</text>
   </block>
   <block wx:else>
-    <view class="swatch" style="{{active ? 'background: ' + styleItem.swatch : ''}}"></view>
+    <view class="swatch" style="{{active ? 'background: ' + styleItem.swatch : ''}}">
+      <image wx:if="{{preview}}" class="swatch-img" src="{{preview}}" mode="aspectFill" />
+    </view>
     <view class="meta">
       <text class="name">{{styleItem.name}}</text>
       <text class="subtitle">{{styleItem.subtitle}}</text>

@@ -13,8 +13,13 @@ Component({
     active: { type: Boolean, value: false },
     /** 紧凑芯片态：只留名字，用于首屏一行平铺选画风，压低竖高 */
     compact: { type: Boolean, value: false },
-    /** 密度档：仍是两列卡片，仅缩短色块 + 收紧内边距，用于第二步降低高度占用 */
+    /** 密度档：收紧 meta 内边距，用于第二步降低高度占用 */
     dense: { type: Boolean, value: false },
+    /**
+     * 画风示例图（本地缓存路径）。传入则替代色块直观展示画风效果，
+     * 加载中露出色块底色，空值（画风没配示例图）整体退回纯色块。
+     */
+    preview: { type: String, value: '' },
   },
 
   methods: {

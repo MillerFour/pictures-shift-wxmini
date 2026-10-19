@@ -75,7 +75,7 @@ function buildPrompt(style, strength) {
 
 /**
  * 各厂商 HTTP 调用的公共样板：网络错误 / 非 JSON / 非 2xx 一律包装成 ProviderError。
- * label 是面向用户的厂商名（方舟 / TokenHub / 百炼），进错误文案。
+ * label 是面向用户的厂商名（方舟 / TokenHub），进错误文案。
  * 返回的 call 签名与 httpJson 一致：call(url, { method, headers, body })，body 为已序列化字符串。
  */
 function makeJsonCaller(provider, label) {

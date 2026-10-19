@@ -41,18 +41,17 @@
         <view class="page-body">
 
           <view class="hero">
-            <text class="t-title">定格生活瞬间，一键换成多样艺术风格</text>
+            <text class="t-title">一张照片，百变画风</text>
           </view>
 
           <view class="example-head">
-            <text class="t-h2">拖动滑块，先睹为快</text>
-            <text class="t-cap">点下方画风立即切换效果，挑一个你喜欢的吧~</text>
+            <text class="t-h2">拖动滑块看效果，点下方切换画风</text>
           </view>
 
           <compare-slider wx:if="{{exampleOriginal && exampleAfter}}" before="{{exampleOriginal}}" after="{{exampleAfter}}" />
           <!-- 示例素材未配置（或直链未就绪）时的占位：引导直接上传，不阻塞主流程 -->
           <view wx:else class="example-empty">
-            <text class="example-empty-text">示例图筹备中 · 先挑个画风，上传照片直接生成</text>
+            <text class="example-empty-text">示例图筹备中，先挑画风上传照片</text>
           </view>
 
           <!-- 画风平铺一行：藏在横向滚动后面的选项等于让用户多操作一步，这里一屏看完 -->
@@ -73,7 +72,7 @@
             <text class="uploader-sub">JPG / PNG / WebP，{{maxSizeMB}}MB 以内</text>
           </view>
 
-          <text class="t-cap privacy">照片只用于本次风格化，处理完即从服务端内存清除，不写入数据库。</text>
+          <text class="t-cap privacy">照片仅用于本次风格化，用完即删，不写入数据库。</text>
 
           <view wx:if="{{notice}}" class="notice">{{notice}}</view>
 
@@ -103,6 +102,7 @@
               wx:key="id"
               class="grid-item"
               style-item="{{item}}"
+              preview="{{previews[item.id]}}"
               active="{{item.id === styleId}}"
               dense
               bind:select="onSelectStyle"
